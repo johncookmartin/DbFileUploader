@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CSVDataUploader": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Users\\johnc\\BankImports\\2024Grocery.csv C:\\Users\\johnc\\BankImports\\GroceryConfig.json.txt"
+    }
+  }
+}
