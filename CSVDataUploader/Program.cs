@@ -3,6 +3,7 @@ using CSVDataUploaderDataAccessLibrary.Data;
 using CSVDataUploaderDataAccessLibrary.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CSVDataUploader;
 
@@ -28,6 +29,11 @@ internal class Program
 
         var services = new ServiceCollection();
 
+        services.AddLogging(loggingConfig =>
+        {
+            loggingConfig.AddConsole();
+        });
+
         services.AddSingleton<IConfiguration>(config);
         services.AddSingleton(tableImportSchema);
 
@@ -47,7 +53,11 @@ internal class Program
         var db = serviceProvider.GetRequiredService<ISqlDataAccess>();
         var uploader = serviceProvider.GetRequiredService<IUploaderData>();
 
-        await uploader.SaveData(records, skipHeaderLines, deletePrevious);
+        if (deletePrevious)
+        {
+            await uploader.DeleteData();
+        }
+        await uploader.SaveData(records, skipHeaderLines);
 
     }
 }

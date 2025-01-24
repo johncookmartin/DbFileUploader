@@ -2,5 +2,6 @@
 
 public interface IUploaderData
 {
-    Task SaveData(List<string[]> records, int skipHeaderLines, bool deletePrevious = true);
+    Task DeleteData(string? tableName = null);
+    Task SaveData(List<string[]> records, int startingIndex);
 }

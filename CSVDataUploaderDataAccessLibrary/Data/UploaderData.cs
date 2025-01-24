@@ -1,5 +1,6 @@
 ﻿using CSVDataUploaderDataAccessLibrary.Models;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace CSVDataUploaderDataAccessLibrary.Data;
@@ -7,33 +8,35 @@ public class UploaderData : IUploaderData
 {
     private readonly ISqlDataAccess _db;
     private readonly TableImportSchemaModel _tableImportSchema;
+    private readonly ILogger<UploaderData> _logger;
 
-    public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema)
+    public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema, ILogger<UploaderData> logger)
     {
         _db = db;
         _tableImportSchema = tableImportSchema;
+        _logger = logger;
+    }
+    public async Task DeleteData(string? tableName = null)
+    {
+        tableName = tableName ?? _tableImportSchema.TableName;
+        await _db.ExecuteDataAsync<dynamic>($@"DELETE FROM {tableName};", new { });
+        _logger.LogInformation($"Deleting all previous data from {tableName}");
     }
 
-    public async Task SaveData(List<string[]> records, int skipHeaderLines, bool deletePrevious = true)
+    public async Task SaveData(List<string[]> records, int startingIndex)
     {
-        if (deletePrevious)
-        {
-            Console.WriteLine($"Deleting all records from {_tableImportSchema.TableName}");
-            await _db.ExecuteDataAsync<dynamic>(GenerateDeleteQuery(), new { });
-        }
 
         int colNum = _tableImportSchema.Columns.Count();
         int insertCount = 0;
 
         //skip headerlines
-        for (int rowIndex = skipHeaderLines; rowIndex < records.Count; rowIndex++)
+        for (int rowIndex = startingIndex; rowIndex < records.Count; rowIndex++)
         {
             var record = records[rowIndex];
 
             if (record.Length != colNum)
             {
-                Console.WriteLine($"Skipping line {rowIndex} due to column mismatch");
-                continue;
+                _logger.LogWarning($"Warning: cannot import {rowIndex} due to column mismatch");
             }
             else
             {
@@ -45,28 +48,9 @@ public class UploaderData : IUploaderData
                     string value = record[colIndex].ToString().Trim('"');
                     string colType = _tableImportSchema.Columns[colIndex].DataType;
 
-                    if (colType.Contains("datetime", StringComparison.OrdinalIgnoreCase))
-                    {
-                        DateTime.TryParse(value, out DateTime dateTimeValue);
-                        parameters.Add($"@{colName}", dateTimeValue);
-                    }
-                    else if (colType.Contains("decimal", StringComparison.OrdinalIgnoreCase))
-                    {
-                        decimal.TryParse(value, out decimal decimalValue);
-                        parameters.Add($"@{colName}", decimalValue);
-                    }
-                    else if (colType.Contains("int", StringComparison.OrdinalIgnoreCase))
-                    {
-                        int.TryParse(value, out int intValue);
-                        parameters.Add($"@{colName}", intValue);
-                    }
-                    else
-                    {
-                        parameters.Add($"@{colName}", value);
-                    }
+                    parameters.Add($"@{colName}", GenerateParamValue(value, colType, rowIndex, colIndex));
                 }
 
-                //Console.WriteLine($"Writing Row: {rowIndex}");
                 int id = (await _db.QueryDataAsync<int, dynamic>(GenerateInsertQuery(), parameters)).First();
                 if (id > 0)
                 {
@@ -74,20 +58,12 @@ public class UploaderData : IUploaderData
                 }
                 else
                 {
-                    Console.WriteLine($"Unknown error trying to save row: {rowIndex}");
+                    _logger.LogWarning($"Warning: unknown error trying to save row: {rowIndex}");
                 }
-                //Console.WriteLine($"Saved Row {rowIndex} with Id: {id}");
             }
         }
 
-        Console.WriteLine($"Saved {insertCount} rows from original {records.Count()}");
-    }
-
-    private string GenerateDeleteQuery()
-    {
-        string sql = $@"DELETE FROM {_tableImportSchema.TableName};";
-
-        return sql;
+        _logger.LogInformation($"Saved {insertCount} rows from original {records.Count()}");
     }
 
     private string GenerateInsertQuery()
@@ -114,5 +90,47 @@ public class UploaderData : IUploaderData
         sql = $@"INSERT INTO {_tableImportSchema.TableName} ({columnsBuilder}) VALUES ({paramsBuilder}); SELECT SCOPE_IDENTITY();";
 
         return sql;
+    }
+
+    private dynamic GenerateParamValue(string value, string colType, int rowIndex, int colIndex)
+    {
+        bool isValid = false;
+        string warningMessage = $"Warning: {colType} value expected but not recieved in row: {rowIndex} col: {colIndex}. " +
+                    $"Will import default value.";
+
+        if (colType.Contains("datetime", StringComparison.OrdinalIgnoreCase))
+        {
+            isValid = DateTime.TryParse(value, out DateTime dateTimeValue);
+            if (!isValid)
+            {
+                _logger.LogWarning(warningMessage);
+                dateTimeValue = DateTime.MinValue;
+            }
+            return dateTimeValue;
+        }
+        else if (colType.Contains("decimal", StringComparison.OrdinalIgnoreCase))
+        {
+            isValid = decimal.TryParse(value, out decimal decimalValue);
+            if (!isValid)
+            {
+                _logger.LogWarning(warningMessage);
+                decimalValue = decimal.Zero;
+            }
+            return decimalValue;
+        }
+        else if (colType.Contains("int", StringComparison.OrdinalIgnoreCase))
+        {
+            isValid = int.TryParse(value, out int intValue);
+            if (!isValid)
+            {
+                _logger.LogWarning(warningMessage);
+                intValue = 0;
+            }
+            return intValue;
+        }
+        else
+        {
+            return value;
+        }
     }
 }
