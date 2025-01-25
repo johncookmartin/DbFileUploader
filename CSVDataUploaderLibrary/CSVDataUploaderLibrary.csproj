@@ -10,4 +10,8 @@
     <PackageReference Include="CsvHelper" Version="33.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CSVDataUploaderDataAccessLibrary\CSVDataUploaderDataAccessLibrary.csproj" />
+  </ItemGroup>
+
 </Project>

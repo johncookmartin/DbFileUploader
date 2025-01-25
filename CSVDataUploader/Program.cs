@@ -1,6 +1,7 @@
 ﻿using CSVDataUploader.ConsoleUI;
 using CSVDataUploaderDataAccessLibrary.Data;
 using CSVDataUploaderDataAccessLibrary.Models;
+using CSVDataUploaderLibrary;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -40,6 +41,8 @@ internal class Program
         services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
         services.AddSingleton<IUploaderData, UploaderData>();
 
+        services.AddSingleton<UploaderSaveHandler, UploaderSaveHandler>();
+
         var serviceProvider = services.BuildServiceProvider();
 
         int skipHeaderLines = InputHandler.GetSkipHeaderLines(config);
@@ -51,11 +54,12 @@ internal class Program
         bool deletePrevious = InputHandler.GetDeletePrevious(config, tableImportSchema.TableName);
 
         var db = serviceProvider.GetRequiredService<ISqlDataAccess>();
-        var uploader = serviceProvider.GetRequiredService<IUploaderData>();
+        var uploaderData = serviceProvider.GetRequiredService<IUploaderData>();
+        var uploader = serviceProvider.GetRequiredService<UploaderSaveHandler>();
 
         if (deletePrevious)
         {
-            await uploader.DeleteData();
+            await uploader.DeleteTableData();
         }
         await uploader.SaveData(records, skipHeaderLines);
 

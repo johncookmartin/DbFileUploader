@@ -2,6 +2,6 @@
 
 public interface IUploaderData
 {
-    Task DeleteData(string? tableName = null);
-    Task SaveData(List<string[]> records, int startingIndex);
+    Task DeleteTableData(string tableName);
+    Task<int> SaveRow(dynamic parameters);
 }
