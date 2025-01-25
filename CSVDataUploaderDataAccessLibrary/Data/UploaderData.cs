@@ -1,5 +1,4 @@
 ﻿using CSVDataUploaderDataAccessLibrary.Models;
-using Microsoft.Extensions.Logging;
 using System.Text;
 
 
@@ -8,13 +7,11 @@ public class UploaderData : IUploaderData
 {
     private readonly ISqlDataAccess _db;
     private readonly TableImportSchemaModel _tableImportSchema;
-    private readonly ILogger<UploaderData> _logger;
 
-    public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema, ILogger<UploaderData> logger)
+    public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema)
     {
         _db = db;
         _tableImportSchema = tableImportSchema;
-        _logger = logger;
     }
     public async Task DeleteTableData(string tableName)
     {

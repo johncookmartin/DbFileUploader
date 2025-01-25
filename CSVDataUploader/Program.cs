@@ -12,7 +12,7 @@ internal class Program
 {
     static async Task Main(string[] args)
     {
-
+        //Checking input files
         string configFilePath = InputHandler.GetConfigFile(args);
 
         var builder = new ConfigurationBuilder()
@@ -28,6 +28,7 @@ internal class Program
             return;
         }
 
+        //Adding Services
         var services = new ServiceCollection();
 
         services.AddLogging(loggingConfig =>
@@ -45,6 +46,7 @@ internal class Program
 
         var serviceProvider = services.BuildServiceProvider();
 
+        //Getting Operator Input
         int skipHeaderLines = InputHandler.GetSkipHeaderLines(config);
         List<string[]> records = InputHandler.GetCSVData(args, config);
         if (records.Count == 0)
@@ -53,6 +55,8 @@ internal class Program
         }
         bool deletePrevious = InputHandler.GetDeletePrevious(config, tableImportSchema.TableName);
 
+
+        //Processing File
         var db = serviceProvider.GetRequiredService<ISqlDataAccess>();
         var uploaderData = serviceProvider.GetRequiredService<IUploaderData>();
         var uploader = serviceProvider.GetRequiredService<UploaderSaveHandler>();
