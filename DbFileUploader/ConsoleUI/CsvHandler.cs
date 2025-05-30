@@ -30,6 +30,7 @@ public class CsvHandler : InputHandler
         //Get Operator Input
         SkipHeaderLines = GetSkipHeaderLines(config);
         Records = GetCSVData(args, config);
+        DeletePrevious = GetDeletePrevious(config, tableImportSchema.TableName);
 
         //Processing File
         var db = provider.GetRequiredService<ISqlDataAccess>();
@@ -133,13 +134,36 @@ public class CsvHandler : InputHandler
         return skipHeaderLines;
     }
 
-    public async void UploadFile()
+    public async Task<bool> UploadFile()
     {
         if (Records.Count == 0)
         {
             Console.WriteLine("No records found in the CSV file.");
-            return;
+            return false;
         }
-        await Uploader.SaveData(Records, SkipHeaderLines);
+
+        if (DeletePrevious)
+        {
+            try
+            {
+                await Uploader.DeleteTableData();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting previous data: {ex.Message}");
+                return false;
+            }
+        }
+
+        try
+        {
+            await Uploader.SaveData(Records, SkipHeaderLines);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error uploading data: {ex.Message}");
+            return false;
+        }
+        return true;
     }
 }

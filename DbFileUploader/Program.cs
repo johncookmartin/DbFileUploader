@@ -4,7 +4,7 @@ namespace DbFileUploader;
 
 internal class Program
 {
-    static void Main(string[] args)
+    static async void Main(string[] args)
     {
         if (args.Length == 0)
         {
@@ -18,7 +18,7 @@ internal class Program
         {
             case ".csv":
                 var uploadHandler = new CsvHandler(args);
-                uploadHandler.UploadFile();
+                bool uploaded = await uploadHandler.UploadFile();
                 break;
             case ".json":
                 throw new NotImplementedException("JSON file upload is not implemented yet.");
