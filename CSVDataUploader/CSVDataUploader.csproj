@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CSVDataUploaderDataAccessLibrary\DbFileUploaderDataAccessLibrary.csproj" />
-    <ProjectReference Include="..\CSVDataUploaderLibrary\CSVDataUploaderLibrary.csproj" />
+    <ProjectReference Include="..\CSVDataUploaderLibrary\CSVUploaderLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

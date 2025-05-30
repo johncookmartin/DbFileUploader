@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSVDataUploader", "CSVDataU
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbFileUploaderDataAccessLibrary", "CSVDataUploaderDataAccessLibrary\DbFileUploaderDataAccessLibrary.csproj", "{C1044723-6C4F-481E-A6D9-D7A066D1E432}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVDataUploaderLibrary", "CSVDataUploaderLibrary\CSVDataUploaderLibrary.csproj", "{6C7E3ECC-3269-4002-B772-3925BFEF9011}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVUploaderLibrary", "CSVDataUploaderLibrary\CSVUploaderLibrary.csproj", "{6C7E3ECC-3269-4002-B772-3925BFEF9011}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbFileUploader", "DbFileUploader\DbFileUploader.csproj", "{EA41113A-4A8D-4FB3-912E-774D59753A41}"
 EndProject

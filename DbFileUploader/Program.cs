@@ -2,8 +2,6 @@
 
 internal class Program
 {
-    public static object CSVDataUploader { get; private set; }
-
     static void Main(string[] args)
     {
         if (args.Length == 0)
@@ -17,10 +15,10 @@ internal class Program
         switch (fileType)
         {
             case ".csv":
-                CSVDataUploader.Program.Main(args);
+                throw new NotImplementedException("CSV file upload is not implemented yet.");
                 break;
             case ".json":
-                JsonDataUploader.Program.Main(args);
+                throw new NotImplementedException("JSON file upload is not implemented yet.");
                 break;
             default:
                 Console.WriteLine($"Unsupported file type: {fileType}. Supported types are .csv, .json, and .xml.");
