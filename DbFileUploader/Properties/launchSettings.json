@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "DbFileUploader": {
+      "commandName": "Project",
+      "commandLineArgs": "bloblist.json",
+      "workingDirectory": "D:\\temp"
+    }
+  }
+}
