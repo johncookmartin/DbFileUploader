@@ -1,4 +1,6 @@
-﻿namespace DbFileUploader;
+﻿using DbFileUploader.ConsoleUI;
+
+namespace DbFileUploader;
 
 internal class Program
 {
@@ -15,7 +17,8 @@ internal class Program
         switch (fileType)
         {
             case ".csv":
-                throw new NotImplementedException("CSV file upload is not implemented yet.");
+                var uploadHandler = new CsvHandler(args);
+                uploadHandler.UploadFile();
                 break;
             case ".json":
                 throw new NotImplementedException("JSON file upload is not implemented yet.");
