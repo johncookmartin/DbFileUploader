@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "CSVDataUploader": {
-      "commandName": "Project",
-      "commandLineArgs": "D:\\temp\\bloblist.json"
-    }
-  }
-}
