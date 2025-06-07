@@ -1,4 +1,4 @@
-﻿namespace CSVDataUploaderDataAccessLibrary.Models;
+﻿namespace DbFileUploaderDataAccessLibraryModels;
 public class ColumnDefinitionModel
 {
     public int ColumnIndex { get; set; }

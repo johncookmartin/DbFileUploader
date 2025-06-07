@@ -1,8 +1,9 @@
-﻿using CSVDataUploaderDataAccessLibrary.Models;
+﻿using DbFileUploaderDataAccessLibrary.Models;
+using DbFileUploaderDataAccessLibraryModels;
 using System.Text;
 
 
-namespace CSVDataUploaderDataAccessLibrary.Data;
+namespace DbFileUploaderDataAccessLibrary.Data;
 public class UploaderData : IUploaderData
 {
     private readonly ISqlDataAccess _db;

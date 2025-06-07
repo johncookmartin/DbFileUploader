@@ -4,7 +4,7 @@ namespace DbFileUploader;
 
 internal class Program
 {
-    static async void Main(string[] args)
+    static async Task Main(string[] args)
     {
         if (args.Length == 0)
         {

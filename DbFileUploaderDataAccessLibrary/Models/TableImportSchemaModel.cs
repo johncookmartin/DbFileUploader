@@ -1,4 +1,6 @@
-﻿namespace CSVDataUploaderDataAccessLibrary.Models;
+﻿using DbFileUploaderDataAccessLibraryModels;
+
+namespace DbFileUploaderDataAccessLibrary.Models;
 public class TableImportSchemaModel
 {
     public string TableName { get; set; }

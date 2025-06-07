@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CSVDataUploaderDataAccessLibrary\DbFileUploaderDataAccessLibrary.csproj" />
+    <ProjectReference Include="..\DbFileUploaderDataAccessLibrary\DbFileUploaderDataAccessLibrary.csproj" />
   </ItemGroup>
 
 </Project>

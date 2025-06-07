@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using System.Data;
 
-namespace CSVDataUploaderDataAccessLibrary.Data;
+namespace DbFileUploaderDataAccessLibrary.Data;
 public class SqlDataAccess : ISqlDataAccess
 {
     private readonly IConfiguration _config;

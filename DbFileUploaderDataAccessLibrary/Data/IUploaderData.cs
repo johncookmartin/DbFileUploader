@@ -1,4 +1,4 @@
-﻿namespace CSVDataUploaderDataAccessLibrary.Data;
+﻿namespace DbFileUploaderDataAccessLibrary.Data;
 
 public interface IUploaderData
 {

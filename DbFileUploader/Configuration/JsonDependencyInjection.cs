@@ -1,17 +1,15 @@
-﻿using CSVDataUploaderLibrary;
-using DbFileUploaderDataAccessLibrary.Data;
+﻿using DbFileUploaderDataAccessLibrary.Data;
 using DbFileUploaderDataAccessLibrary.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace DbFileUploader.Configuration;
-public static class CsvDependencyInjection
+public static class JsonDependencyInjection
 {
     public static IServiceCollection ConfigureServices(IConfiguration config, TableImportSchemaModel schema)
     {
         var services = new ServiceCollection();
-
         services.AddLogging(loggingConfig =>
         {
             loggingConfig.AddConsole();
@@ -21,11 +19,8 @@ public static class CsvDependencyInjection
         services.AddSingleton(schema);
 
         services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
-        services.AddSingleton<IUploaderData, UploaderData>();
 
-        services.AddSingleton<UploaderSaveHandler, UploaderSaveHandler>();
 
         return services;
     }
-
 }
