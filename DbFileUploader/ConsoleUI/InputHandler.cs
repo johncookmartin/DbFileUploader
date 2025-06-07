@@ -1,13 +1,25 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DbFileUploader.Configuration;
+using DbFileUploaderDataAccessLibrary.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace DbFileUploader.ConsoleUI;
 public class InputHandler
 {
-    public string configFilePath { get; set; }
+    public IConfiguration config { get; set; }
+    public TableImportSchemaModel schemaModel { get; set; }
     public InputHandler(string[] args)
     {
-        configFilePath = GetConfigFile(args);
+        var configFilePath = GetConfigFile(args);
+        config = AppConfiguration.BuildConfiguration(configFilePath);
 
+        TableImportSchemaModel? importSchemaModel = config.GetSection("TableImportSchema").Get<TableImportSchemaModel>();
+        if (importSchemaModel == null)
+        {
+            Console.WriteLine("There is not a valid TableImportSchema in the config file.");
+            return;
+        }
+
+        schemaModel = importSchemaModel;
 
     }
     public string GetConfigFile(string[] args)

@@ -1,7 +1,6 @@
 ﻿using CSVDataUploaderLibrary;
 using DbFileUploader.Configuration;
 using DbFileUploaderDataAccessLibrary.Data;
-using DbFileUploaderDataAccessLibrary.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,22 +14,14 @@ public class CsvHandler : InputHandler
 
     public CsvHandler(string[] args) : base(args)
     {
-        var config = AppConfiguration.BuildConfiguration(configFilePath);
 
-        TableImportSchemaModel? tableImportSchema = config.GetSection("TableImportSchema").Get<TableImportSchemaModel>();
-        if (tableImportSchema == null)
-        {
-            Console.WriteLine("There is not a valid TableImportSchema in the config file.");
-            return;
-        }
-
-        var services = CsvDependencyInjection.ConfigureServices(config, tableImportSchema);
+        var services = CsvDependencyInjection.ConfigureServices(config, schemaModel);
         var provider = services.BuildServiceProvider();
 
         //Get Operator Input
         SkipHeaderLines = GetSkipHeaderLines(config);
         Records = GetCSVData(args, config);
-        DeletePrevious = GetDeletePrevious(config, tableImportSchema.TableName);
+        DeletePrevious = GetDeletePrevious(config, schemaModel.TableName);
 
         //Processing File
         var db = provider.GetRequiredService<ISqlDataAccess>();

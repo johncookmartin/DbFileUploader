@@ -14,14 +14,17 @@ internal class Program
         string fileName = args[0];
         string fileType = Path.GetExtension(fileName).ToLowerInvariant();
 
+        bool uploaded;
         switch (fileType)
         {
             case ".csv":
-                var uploadHandler = new CsvHandler(args);
-                bool uploaded = await uploadHandler.UploadFile();
+                var csvUploadHandler = new CsvHandler(args);
+                uploaded = await csvUploadHandler.UploadFile();
                 break;
             case ".json":
-                throw new NotImplementedException("JSON file upload is not implemented yet.");
+
+                var jsonUploadHandler = new JsonHandler(args);
+                uploaded = await jsonUploadHandler.UploadFile();
                 break;
             default:
                 Console.WriteLine($"Unsupported file type: {fileType}. Supported types are .csv, .json, and .xml.");
