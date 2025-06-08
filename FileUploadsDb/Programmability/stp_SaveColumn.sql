@@ -6,8 +6,6 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @ColumnId INT
-
 	IF NOT EXISTS
 	(
 		SELECT 1
@@ -17,15 +15,15 @@ BEGIN
 	)
 		BEGIN
 			INSERT INTO TableColumns
-			(ColumnName, ColumnType)
+			(TableId, ColumnName, ColumnType)
 			VALUES
-			(@ColumnName, @ColumnType)
+			(@TableId, @ColumnName, @ColumnType)
 		END
 
-	SELECT @ColumnId = Id
+	SELECT Id AS ColumnId
 	FROM TableColumns
 	WHERE ColumnName = @ColumnName
-	      AND TableId = @TableId
+	      AND TableId = @TableId;
 
 	RETURN 0;
 END

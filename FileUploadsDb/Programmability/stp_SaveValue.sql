@@ -11,9 +11,9 @@ BEGIN
 		BEGIN
 			
 			INSERT INTO TableRows
-			(EntryDate)
+			(TableId, EntryDate)
 			VALUES
-			(CURRENT_TIMESTAMP);
+			(@TableId, CURRENT_TIMESTAMP);
 
 			SET @RowId = SCOPE_IDENTITY();
 

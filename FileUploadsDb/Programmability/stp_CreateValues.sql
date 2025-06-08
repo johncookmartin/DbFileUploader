@@ -36,13 +36,18 @@ BEGIN
 			INNER JOIN ' + QUOTENAME(@FileUploadsDb) + '.dbo.TableColumns c ON v.ColumnId = c.Id
 			INNER JOIN ' + QUOTENAME(@FileUploadsDb) + '.dbo.TableNames n ON c.TableId = n.Id
 			WHERE n.Id = ' + CAST(@TableId AS NVARCHAR(10)) + '
+			      AND r.UploadedDate IS NULL
 		) AS SourceTable
 		PIVOT
 		(
 			MAX(Value)
 			FOR ColumnName IN (' + @SqlColumns + ')
 		) AS PivotTable;
-	
+
+		UPDATE ' + QUOTENAME(@FileUploadsDb) + '.dbo.TableRows
+		SET UploadedDate = CURRENT_TIMESTAMP
+		WHERE TableId = ' + CAST(@TableId AS NVARCHAR(10)) + '
+		      AND UploadedDate IS NULL;
 	'
 	
 	EXEC sp_executesql @SQL;

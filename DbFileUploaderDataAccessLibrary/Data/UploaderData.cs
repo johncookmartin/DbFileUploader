@@ -64,45 +64,64 @@ public class UploaderData : IUploaderData
         return id;
     }
 
-    public async Task SaveDynamicRow(string tableName, Dictionary<string, object> data, bool createTable = false)
+    public async Task SaveData(TableImportSchemaModel schemaModel, Dictionary<string, object> data, bool createTable = false)
     {
-        int tableId = (await _db.QueryDataAsync<int, dynamic>("stp_initializeTable", new { TableName = tableName, CreateTable = createTable })).First();
+        int tableId = (await _db.QueryDataAsync<int, dynamic>(
+            "stp_SaveTable",
+            new
+            {
+                TableName = schemaModel.TableName,
+                Database = schemaModel.DatabaseName
+            })).First();
 
         int? rowId = null;
-        int? createRowId = null;
 
         foreach (var entry in data)
         {
+
             _typeMap.TryGetValue(entry.Value.GetType(), out string? sqlType);
 
-            rowId = (await _db.QueryDataAsync<int, dynamic>("stp_InsertValue", new
-            {
-                TableId = tableId,
-                ColumnName = entry.Key,
-                DataType = sqlType ?? "NVARCHAR(MAX)",
-                Value = entry.Value.ToString(),
-                RowId = rowId
-            })).First();
+            int columnId = (await _db.QueryDataAsync<int, dynamic>(
+                "stp_SaveColumn",
+                new
+                {
+                    TableId = tableId,
+                    ColumnName = entry.Key,
+                    ColumnType = sqlType ?? "NVARCHAR(MAX)"
+                })).First();
 
-            if (createTable)
-            {
-                createRowId = await SaveCreateColumn(tableName, entry.Key, sqlType, entry.Value.ToString(), createRowId);
-            }
+            rowId = (await _db.QueryDataAsync<int, dynamic>(
+                "stp_SaveValue",
+                new
+                {
+                    TableId = tableId,
+                    ColumnId = columnId,
+                    Value = entry.Value.ToString(),
+                    RowId = rowId
+                })).First();
+        }
+
+        if (createTable)
+        {
+            await CreateTable(tableId);
+            await CreateColumns(tableId);
+            await CreateValues(tableId);
         }
     }
 
-    private async Task<int> SaveCreateColumn(string tableName, string columnName, string dataType, string columnData, int? rowId)
+    private async Task CreateColumns(int tableId)
     {
-        int entryId = (await _db.QueryDataAsync<int, dynamic>("stp_InsertCreateColumn", new
-        {
-            TableId = tableName,
-            ColumnName = columnName,
-            DataType = dataType,
-            ColumnData = columnData,
-            Id = rowId
-        })).First();
+        await _db.ExecuteDataAsync<dynamic>("stp_CreateColumns", new { TableId = tableId });
+    }
 
-        return entryId;
+    private async Task CreateTable(int tableId)
+    {
+        await _db.ExecuteDataAsync<dynamic>("stp_CreateTable", new { TableId = tableId });
+    }
+
+    private async Task CreateValues(int tableId)
+    {
+        await _db.ExecuteDataAsync<dynamic>("stp_CreateValues", new { TableId = tableId });
     }
 
 
