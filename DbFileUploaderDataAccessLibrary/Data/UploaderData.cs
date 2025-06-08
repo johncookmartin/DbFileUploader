@@ -23,8 +23,8 @@ public class UploaderData : IUploaderData
         [typeof(double?)] = "FLOAT",
         [typeof(float)] = "REAL",
         [typeof(float?)] = "REAL",
-        [typeof(DateTime)] = "DATETIME",
-        [typeof(DateTime?)] = "DATETIME",
+        [typeof(DateTime)] = "DATETIME2(0)",
+        [typeof(DateTime?)] = "DATETIME2(0)",
         [typeof(byte[])] = "VARBINARY(MAX)"
     };
 
@@ -64,14 +64,14 @@ public class UploaderData : IUploaderData
         return id;
     }
 
-    public async Task SaveData(TableImportSchemaModel schemaModel, Dictionary<string, object> data, bool createTable = false)
+    public async Task SaveData(Dictionary<string, object> data)
     {
         int tableId = (await _db.QueryDataAsync<int, dynamic>(
             "stp_SaveTable",
             new
             {
-                TableName = schemaModel.TableName,
-                Database = schemaModel.DatabaseName
+                TableName = _tableImportSchema.TableName,
+                Database = _tableImportSchema.DatabaseName
             })).First();
 
         int? rowId = null;
@@ -101,7 +101,7 @@ public class UploaderData : IUploaderData
                 })).First();
         }
 
-        if (createTable)
+        if (_tableImportSchema.CreateTable)
         {
             await CreateTable(tableId);
             await CreateColumns(tableId);
