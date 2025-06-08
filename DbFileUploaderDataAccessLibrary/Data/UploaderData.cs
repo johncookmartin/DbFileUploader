@@ -8,6 +8,25 @@ public class UploaderData : IUploaderData
 {
     private readonly ISqlDataAccess _db;
     private readonly TableImportSchemaModel _tableImportSchema;
+    private static readonly Dictionary<Type, string> _typeMap = new()
+    {
+        [typeof(string)] = "NVARCHAR(MAX)",
+        [typeof(int)] = "INT",
+        [typeof(int?)] = "INT",
+        [typeof(long)] = "BIGINT",
+        [typeof(long?)] = "BIGINT",
+        [typeof(bool)] = "BIT",
+        [typeof(bool?)] = "BIT",
+        [typeof(decimal)] = "DECIMAL(18,2)",
+        [typeof(decimal?)] = "DECIMAL(18,2)",
+        [typeof(double)] = "FLOAT",
+        [typeof(double?)] = "FLOAT",
+        [typeof(float)] = "REAL",
+        [typeof(float?)] = "REAL",
+        [typeof(DateTime)] = "DATETIME",
+        [typeof(DateTime?)] = "DATETIME",
+        [typeof(byte[])] = "VARBINARY(MAX)"
+    };
 
     public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema)
     {
@@ -43,6 +62,47 @@ public class UploaderData : IUploaderData
         int id = idList.FirstOrDefault(0);
 
         return id;
+    }
+
+    public async Task SaveDynamicRow(string tableName, Dictionary<string, object> data, bool createTable = false)
+    {
+        int tableId = (await _db.QueryDataAsync<int, dynamic>("stp_initializeTable", new { TableName = tableName, CreateTable = createTable })).First();
+
+        int? rowId = null;
+        int? createRowId = null;
+
+        foreach (var entry in data)
+        {
+            _typeMap.TryGetValue(entry.Value.GetType(), out string? sqlType);
+
+            rowId = (await _db.QueryDataAsync<int, dynamic>("stp_InsertValue", new
+            {
+                TableId = tableId,
+                ColumnName = entry.Key,
+                DataType = sqlType ?? "NVARCHAR(MAX)",
+                Value = entry.Value.ToString(),
+                RowId = rowId
+            })).First();
+
+            if (createTable)
+            {
+                createRowId = await SaveCreateColumn(tableName, entry.Key, sqlType, entry.Value.ToString(), createRowId);
+            }
+        }
+    }
+
+    private async Task<int> SaveCreateColumn(string tableName, string columnName, string dataType, string columnData, int? rowId)
+    {
+        int entryId = (await _db.QueryDataAsync<int, dynamic>("stp_InsertCreateColumn", new
+        {
+            TableId = tableName,
+            ColumnName = columnName,
+            DataType = dataType,
+            ColumnData = columnData,
+            Id = rowId
+        })).First();
+
+        return entryId;
     }
 
 

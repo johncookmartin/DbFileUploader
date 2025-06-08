@@ -1,0 +1,8 @@
+﻿CREATE TABLE [dbo].[TableColumns]
+(
+	[Id] INT NOT NULL IDENTITY(1,1) PRIMARY KEY,
+	[TableId] INT NOT NULL,
+	[ColumnName] VARCHAR(255),
+	[ColumnType] VARCHAR(255),
+	CONSTRAINT FK_TableColumns_TableNames FOREIGN KEY ([TableId]) REFERENCES TableNames ([Id]) ON DELETE CASCADE ON UPDATE CASCADE
+)

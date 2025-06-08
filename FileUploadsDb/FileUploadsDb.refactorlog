@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="259b9845-8446-4d30-aafe-3c20bf550af7" ChangeDateTime="06/08/2025 14:05:08">
+    <Property Name="ElementName" Value="[dbo].[TableRows].[Inserted]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TableRows]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="CopiedDate" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="c7ef8772-8f72-4fe1-b0b2-f689a2f40327" ChangeDateTime="06/08/2025 14:05:23">
+    <Property Name="ElementName" Value="[dbo].[TableRows].[CopiedDate]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TableRows]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="TransferredDate" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="d6eb4947-c7c6-4457-b606-cf6c5fa68601" ChangeDateTime="06/08/2025 14:05:33">
+    <Property Name="ElementName" Value="[dbo].[TableRows].[TransferredDate]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[TableRows]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="UploadedDate" />
+  </Operation>
+</Operations>

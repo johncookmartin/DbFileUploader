@@ -57,12 +57,24 @@
   <ItemGroup>
     <Folder Include="Properties" />
     <Folder Include="Programmability" />
+    <Folder Include="Tables" />
   </ItemGroup>
   <ItemGroup>
-    <Build Include="Programmability\stp_InitializeTable.sql" />
-    <Build Include="Programmability\stp_InsertColumn.sql" />
+    <Build Include="Tables\TableNames.sql" />
+    <Build Include="Tables\TableRows.sql" />
+    <Build Include="Tables\TableColumns.sql" />
+    <Build Include="Tables\TableValues.sql" />
+    <Build Include="Programmability\stp_SaveTable.sql" />
+    <Build Include="Programmability\stp_SaveColumn.sql" />
+    <Build Include="Programmability\stp_SaveValue.sql" />
+    <Build Include="Programmability\stp_CreateTable.sql" />
+    <Build Include="Programmability\stp_CreateColumns.sql" />
+    <Build Include="Programmability\stp_CreateValues.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FileUploadsDb.publish.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="FileUploadsDb.refactorlog" />
   </ItemGroup>
 </Project>
