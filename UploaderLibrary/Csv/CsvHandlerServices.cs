@@ -2,16 +2,16 @@
 using CsvHelper.Configuration;
 using System.Globalization;
 
-namespace CSVDataUploaderLibrary;
+namespace UploaderLibrary.Csv;
 public static class CsvHandlerServices
 {
-    public static List<string[]> FormatCSV(string filePath, bool hasHeaders = false)
+    public static List<string[]> FormatCSV(string filePath, bool includeHeaders = false)
     {
         var records = new List<string[]>();
 
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            HasHeaderRecord = hasHeaders,
+            HasHeaderRecord = includeHeaders,
         };
 
         using (var reader = new StreamReader(filePath))

@@ -1,56 +1,45 @@
-﻿using CSVDataUploaderLibrary;
-using DbFileUploader.Configuration;
+﻿using DbFileUploader.Configuration;
 using DbFileUploaderDataAccessLibrary.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UploaderLibrary.Csv;
 
 namespace DbFileUploader.ConsoleUI;
 public class CsvHandler : InputHandler
 {
-    public bool DeletePrevious { get; set; }
     public List<string[]> Records { get; set; } = new List<string[]>();
-    public int SkipHeaderLines { get; set; }
-    public UploaderSaveHandler Uploader { get; set; }
+    private readonly int _skipHeaderLines;
+    private readonly bool _hasHeaders;
+    private readonly CsvUploaderSaveHandler _uploader;
 
-    public CsvHandler(string[] args) : base(args)
+    public CsvHandler(Dictionary<string, string> arguments) : base(arguments)
     {
 
-        var services = CsvDependencyInjection.ConfigureServices(config, schemaModel);
+        var services = CsvDependencyInjection.ConfigureServices(_config);
         var provider = services.BuildServiceProvider();
 
         //Get Operator Input
-        SkipHeaderLines = GetSkipHeaderLines(config);
-        Records = GetCSVData(args, config);
-        DeletePrevious = GetDeletePrevious(config, schemaModel.TableName);
+        _skipHeaderLines = GetSkipHeaderLines();
+        _hasHeaders = GetHasHeaders();
+        Records = GetCSVData(arguments["file"]);
 
         //Processing File
         var db = provider.GetRequiredService<ISqlDataAccess>();
         var uploaderData = provider.GetRequiredService<IUploaderData>();
-        Uploader = provider.GetRequiredService<UploaderSaveHandler>();
+        _uploader = provider.GetRequiredService<CsvUploaderSaveHandler>();
     }
 
-    public List<string[]> GetCSVData(string[] args, IConfiguration config)
+    public List<string[]> GetCSVData(string csvFilePath)
     {
         List<string[]> records = new();
 
-        string csvFilePath;
-        if (args.Length == 0)
-        {
-            Console.WriteLine("No File Detected.");
-            csvFilePath = GetFilePath();
-        }
-
-
-        csvFilePath = args[0];
         if (!File.Exists(csvFilePath))
         {
             Console.WriteLine($"CSV file not found: {csvFilePath}");
             return records;
         }
 
-
-        bool hasHeaders = GetHasHeaders(config);
-        records = CsvHandlerServices.FormatCSV(csvFilePath, hasHeaders);
+        records = CsvHandlerServices.FormatCSV(csvFilePath, _hasHeaders);
         if (records.Count == 0)
         {
             Console.WriteLine("CSV file is empty");
@@ -60,12 +49,12 @@ public class CsvHandler : InputHandler
 
     }
 
-    public bool GetHasHeaders(IConfiguration config)
+    public bool GetHasHeaders()
     {
         bool hasHeaders = true;
         bool isValid = false;
 
-        var configSection = config.GetSection("CsvDetails:HasHeaders");
+        var configSection = _config.GetSection("CsvDetails:HasHeaders");
         if (configSection.Exists())
         {
             hasHeaders = configSection.Get<bool>();
@@ -99,12 +88,12 @@ public class CsvHandler : InputHandler
         return hasHeaders;
     }
 
-    public int GetSkipHeaderLines(IConfiguration config)
+    public int GetSkipHeaderLines()
     {
         int skipHeaderLines = 0;
         bool headerLinesEntered = false;
 
-        var configSection = config.GetSection("CsvDetails:SkipHeaderLines");
+        var configSection = _config.GetSection("CsvDetails:SkipHeaderLines");
         if (configSection.Exists())
         {
             skipHeaderLines = configSection.Get<int>();
@@ -133,11 +122,11 @@ public class CsvHandler : InputHandler
             return false;
         }
 
-        if (DeletePrevious)
+        if (_config.GetValue<bool>("DeletePrevious"))
         {
             try
             {
-                await Uploader.DeleteTableData();
+                await _uploader.DeleteTableData();
             }
             catch (Exception ex)
             {
@@ -148,7 +137,7 @@ public class CsvHandler : InputHandler
 
         try
         {
-            await Uploader.SaveData(Records, SkipHeaderLines);
+            await _uploader.SaveData(Records, _skipHeaderLines, _hasHeaders);
         }
         catch (Exception ex)
         {

@@ -1,52 +1,137 @@
 ﻿using DbFileUploader.Configuration;
-using DbFileUploaderDataAccessLibrary.Models;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace DbFileUploader.ConsoleUI;
 public class InputHandler
 {
-    public IConfiguration config { get; set; }
-    public TableImportSchemaModel schemaModel { get; set; }
-    public InputHandler(string[] args)
+    protected readonly IConfiguration _config;
+    public InputHandler(Dictionary<string, string> arguments)
     {
-        var configFilePath = GetConfigFile(args);
-        config = AppConfiguration.BuildConfiguration(configFilePath);
-
-        TableImportSchemaModel? importSchemaModel = config.GetSection("TableImportSchema").Get<TableImportSchemaModel>();
-        if (importSchemaModel == null)
+        string? configFilePath = GetConfigFile(arguments);
+        bool hasConnectionString = TryCheckConfig(configFilePath, "ConnectionStrings", out var connectionString);
+        if (!TryCheckConfig(configFilePath, "TableName", out var tableName))
         {
-            Console.WriteLine("There is not a valid TableImportSchema in the config file.");
-            return;
+            tableName = GetTableName(arguments);
+        }
+        if (!TryCheckConfig(configFilePath, "DbName", out var dbName))
+        {
+            dbName = GetDbName(arguments);
         }
 
-        schemaModel = importSchemaModel;
+        bool deletePrevious;
+        if (!TryCheckConfig(configFilePath, "DeletePrevious", out var deletePrevString))
+        {
+            deletePrevious = GetDeletePrevious(arguments, tableName);
+        }
+        else if (!bool.TryParse(deletePrevString, out deletePrevious))
+        {
+            deletePrevious = GetDeletePrevious(arguments, tableName);
+        }
+
+        _config = AppConfiguration.BuildConfiguration(configFilePath, tableName, dbName, deletePrevious, hasConnectionString);
 
     }
-    public string GetConfigFile(string[] args)
-    {
-        string? filePath = null;
 
-        if (args.Length == 2)
+    public bool TryCheckConfig(string? configFilePath, string propertyName, out string propertyValue)
+    {
+        bool hasProperty = false;
+        propertyValue = string.Empty;
+        if (configFilePath != null)
         {
-            filePath = args[1];
+            var jsonText = File.ReadAllText(configFilePath);
+            using var jsonDoc = JsonDocument.Parse(jsonText);
+            hasProperty = jsonDoc.RootElement.TryGetProperty(propertyName, out var tryValue);
+
+            if (hasProperty)
+            {
+                propertyValue = tryValue.GetString() ?? string.Empty;
+            }
         }
 
-        filePath = GetFilePath(filePath);
+        return hasProperty;
+    }
+    public string GetDbName(Dictionary<string, string> arguments)
+    {
+        bool isValid = arguments.TryGetValue("db", out var dbName);
+        bool includeDbName = isValid;
+        while (!isValid || string.IsNullOrWhiteSpace(dbName))
+        {
+            Console.WriteLine("No DbName detected, did you want to include one?(Y/N)");
+            string? response = Console.ReadLine();
+            if (response != null)
+            {
+                switch (response.ToUpper())
+                {
+                    case "Y":
+                        includeDbName = true;
+                        isValid = true;
+                        break;
+                    case "N":
+                        isValid = true;
+                        Console.WriteLine("FileUploads will be used as Db");
+                        dbName = "FileUploads";
+                        break;
+                    default:
+                        Console.WriteLine("response must be 'Y' or 'N'");
+                        break;
+                }
+            }
+        }
+
+        while (string.IsNullOrWhiteSpace(dbName))
+        {
+            Console.WriteLine("Enter DbName: ");
+            dbName = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(dbName))
+            {
+                Console.WriteLine("Please enter a DbName.");
+            }
+        }
+
+        return dbName;
+    }
+
+    public string? GetConfigFile(Dictionary<string, string> arguments)
+    {
+        bool isValid = arguments.TryGetValue("config", out var filePath);
+        bool includeConfig = isValid;
+
+        while (!isValid)
+        {
+            Console.WriteLine("No config file detected, did you want to include one?(Y/N)");
+            string? response = Console.ReadLine();
+            if (response != null)
+            {
+                switch (response.ToUpper())
+                {
+                    case "Y":
+                        includeConfig = true;
+                        isValid = true;
+                        break;
+                    case "N":
+                        isValid = true;
+                        break;
+                    default:
+                        Console.WriteLine("response must be 'Y' or 'N'");
+                        break;
+                }
+            }
+        }
+
+        if (includeConfig)
+        {
+            filePath = GetFilePath(filePath);
+        }
 
         return filePath;
     }
 
-    public bool GetDeletePrevious(IConfiguration config, string tableName)
+    public bool GetDeletePrevious(Dictionary<string, string> arguments, string tableName)
     {
-        bool deletePrevious = true;
-        bool isValid = false;
-
-        var configSection = config.GetSection("CsvDetails:DeletePrevious");
-        if (configSection.Exists())
-        {
-            deletePrevious = configSection.Get<bool>();
-            isValid = true;
-        }
+        bool deletePrevious = false;
+        bool isValid = arguments.TryGetValue("delete", out var deletePrevString);
+        isValid = isValid && bool.TryParse(deletePrevString, out deletePrevious);
 
         while (!isValid)
         {
@@ -89,10 +174,11 @@ public class InputHandler
 
         return filePath;
     }
-    public string GetTableName()
+    public string GetTableName(Dictionary<string, string> arguments)
     {
-        string? tableName = null;
-        do
+        bool isValid = arguments.TryGetValue("table", out var tableName);
+
+        while (!isValid || string.IsNullOrWhiteSpace(tableName))
         {
             Console.WriteLine("Enter Name of Table to Import To: ");
             tableName = Console.ReadLine();
@@ -101,7 +187,6 @@ public class InputHandler
                 Console.WriteLine("Please enter a table name.");
             }
         }
-        while (tableName == null);
 
         return tableName;
     }

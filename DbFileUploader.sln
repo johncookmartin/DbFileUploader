@@ -5,13 +5,11 @@ VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbFileUploaderDataAccessLibrary", "DbFileUploaderDataAccessLibrary\DbFileUploaderDataAccessLibrary.csproj", "{C1044723-6C4F-481E-A6D9-D7A066D1E432}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSVUploaderLibrary", "CSVDataUploaderLibrary\CSVUploaderLibrary.csproj", "{6C7E3ECC-3269-4002-B772-3925BFEF9011}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbFileUploader", "DbFileUploader\DbFileUploader.csproj", "{EA41113A-4A8D-4FB3-912E-774D59753A41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonUploaderLibrary", "JsonUploaderLibrary\JsonUploaderLibrary.csproj", "{CDB77C49-8368-4C6C-9767-54F3C19F2CB3}"
-EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "FileUploadsDb", "FileUploadsDb\FileUploadsDb.sqlproj", "{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploaderLibrary", "UploaderLibrary\UploaderLibrary.csproj", "{EDD3EE8D-3F4A-42F5-9F4C-577EB04D5FBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,24 +21,20 @@ Global
 		{C1044723-6C4F-481E-A6D9-D7A066D1E432}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1044723-6C4F-481E-A6D9-D7A066D1E432}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1044723-6C4F-481E-A6D9-D7A066D1E432}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6C7E3ECC-3269-4002-B772-3925BFEF9011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6C7E3ECC-3269-4002-B772-3925BFEF9011}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6C7E3ECC-3269-4002-B772-3925BFEF9011}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6C7E3ECC-3269-4002-B772-3925BFEF9011}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EA41113A-4A8D-4FB3-912E-774D59753A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EA41113A-4A8D-4FB3-912E-774D59753A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA41113A-4A8D-4FB3-912E-774D59753A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA41113A-4A8D-4FB3-912E-774D59753A41}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CDB77C49-8368-4C6C-9767-54F3C19F2CB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CDB77C49-8368-4C6C-9767-54F3C19F2CB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CDB77C49-8368-4C6C-9767-54F3C19F2CB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CDB77C49-8368-4C6C-9767-54F3C19F2CB3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FF9BCDB7-21F2-45BF-BE8F-4D1AC5AF0C05}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{EDD3EE8D-3F4A-42F5-9F4C-577EB04D5FBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDD3EE8D-3F4A-42F5-9F4C-577EB04D5FBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDD3EE8D-3F4A-42F5-9F4C-577EB04D5FBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDD3EE8D-3F4A-42F5-9F4C-577EB04D5FBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

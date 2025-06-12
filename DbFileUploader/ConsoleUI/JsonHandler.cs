@@ -4,7 +4,7 @@ namespace DbFileUploader.ConsoleUI;
 public class JsonHandler : InputHandler
 {
     public bool isArray { get; set; } = false;
-    public JsonHandler(string[] args) : base(args)
+    public JsonHandler(Dictionary<string, string> arguments) : base(arguments)
     {
         //using StreamReader reader = new StreamReader(jsonFilePath);
         //string json = reader.ReadToEnd();
@@ -20,7 +20,7 @@ public class JsonHandler : InputHandler
     {
         bool isValid = false;
 
-        var configSection = config.GetSection("JsonDetails:IsArray");
+        var configSection = _config.GetSection("JsonDetails:IsArray");
         if (configSection.Exists())
         {
             isArray = configSection.Get<bool>();

@@ -1,13 +1,11 @@
-﻿using DbFileUploaderDataAccessLibrary.Models;
-using DbFileUploaderDataAccessLibraryModels;
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 
 
 namespace DbFileUploaderDataAccessLibrary.Data;
 public class UploaderData : IUploaderData
 {
     private readonly ISqlDataAccess _db;
-    private readonly TableImportSchemaModel _tableImportSchema;
     private static readonly Dictionary<Type, string> _typeMap = new()
     {
         [typeof(string)] = "NVARCHAR(MAX)",
@@ -28,50 +26,23 @@ public class UploaderData : IUploaderData
         [typeof(byte[])] = "VARBINARY(MAX)"
     };
 
-    public UploaderData(ISqlDataAccess db, TableImportSchemaModel tableImportSchema)
+    public UploaderData(ISqlDataAccess db)
     {
         _db = db;
-        _tableImportSchema = tableImportSchema;
     }
     public async Task DeleteTableData(string tableName)
     {
         await _db.ExecuteDataAsync<dynamic>($@"DELETE FROM {tableName};", new { });
     }
 
-    public async Task<int> SaveRow(dynamic parameters)
-    {
-        List<ColumnDefinitionModel> columns = _tableImportSchema.Columns;
-
-        var columnsBuilder = new StringBuilder();
-        var paramsBuilder = new StringBuilder();
-
-        for (int i = 0; i < columns.Count; i++)
-        {
-            if (i > 0)
-            {
-                columnsBuilder.Append(", ");
-                paramsBuilder.Append(", ");
-            }
-
-            columnsBuilder.Append(columns[i].Name);
-            paramsBuilder.Append($"@{columns[i].Name}");
-        }
-
-        string sql = $@"INSERT INTO {_tableImportSchema.TableName} ({columnsBuilder}) VALUES ({paramsBuilder}); SELECT SCOPE_IDENTITY();";
-        IEnumerable<int> idList = await _db.QueryDataAsync<int, dynamic>(sql, parameters);
-        int id = idList.FirstOrDefault(0);
-
-        return id;
-    }
-
-    public async Task SaveData(Dictionary<string, object> data)
+    public async Task<int> SaveData(string dbName, string tableName, Dictionary<string, object> data)
     {
         int tableId = (await _db.QueryDataAsync<int, dynamic>(
             "stp_SaveTable",
             new
             {
-                TableName = _tableImportSchema.TableName,
-                Database = _tableImportSchema.DatabaseName
+                TableName = tableName,
+                Database = dbName
             })).First();
 
         int? rowId = null;
@@ -101,26 +72,43 @@ public class UploaderData : IUploaderData
                 })).First();
         }
 
-        if (_tableImportSchema.CreateTable)
-        {
-            await CreateTable(tableId);
-            await CreateColumns(tableId);
-            await CreateValues(tableId);
-        }
+        return tableId;
     }
 
-    private async Task CreateColumns(int tableId)
+    public async Task<int> SaveToExisting(string dbName, string tableName, Dictionary<string, object?> data)
     {
-        await _db.ExecuteDataAsync<dynamic>("stp_CreateColumns", new { TableId = tableId });
+        var columnsBuilder = new StringBuilder();
+        var paramsBuilder = new StringBuilder();
+
+        int i = 0;
+        foreach (var entry in data)
+        {
+            if (i > 0)
+            {
+                columnsBuilder.Append(", ");
+                paramsBuilder.Append(", ");
+            }
+
+            columnsBuilder.Append(entry.Key);
+
+            string appendValue = (entry.Value == null) ? "NULL" : entry.Value.ToString()!;
+            paramsBuilder.Append(appendValue);
+
+            i++;
+        }
+
+        string json = JsonSerializer.Serialize(data);
+
+        string sql = $@"INSERT INTO {dbName}.dbo.{tableName} ({columnsBuilder}) VALUES ({paramsBuilder}); SELECT SCOPE_IDENTITY();";
+        int id = (await _db.QueryDataAsync<int, dynamic>(sql, JsonSerializer.Deserialize<dynamic>(json))).FirstOrDefault(0);
+
+        return id;
     }
 
-    private async Task CreateTable(int tableId)
+    public async Task CreateData(int tableId)
     {
         await _db.ExecuteDataAsync<dynamic>("stp_CreateTable", new { TableId = tableId });
-    }
-
-    private async Task CreateValues(int tableId)
-    {
+        await _db.ExecuteDataAsync<dynamic>("stp_CreateColumns", new { TableId = tableId });
         await _db.ExecuteDataAsync<dynamic>("stp_CreateValues", new { TableId = tableId });
     }
 
