@@ -13,6 +13,10 @@ public static class ParseArguments
                 string value = (i + 1 < args.Length && !args[i + 1].StartsWith("--")) ? args[++i] : string.Empty;
                 result[key] = value;
             }
+            else if (i == 0)
+            {
+                result["file"] = args[i]; // Assume the first argument is the file path
+            }
         }
 
         return result;

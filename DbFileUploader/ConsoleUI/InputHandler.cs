@@ -9,34 +9,28 @@ public class InputHandler
     public InputHandler(Dictionary<string, string> arguments)
     {
         string? configFilePath = GetConfigFile(arguments);
-        bool hasConnectionString = TryCheckConfig(configFilePath, "ConnectionStrings", out var connectionString);
-        if (!TryCheckConfig(configFilePath, "TableName", out var tableName))
+        bool hasConnectionString = TryCheckConfig(configFilePath, "ConnectionStrings", out string? connectionString);
+        if (!TryCheckConfig(configFilePath, "TableName", out string? tableName) || string.IsNullOrWhiteSpace(tableName))
         {
             tableName = GetTableName(arguments);
         }
-        if (!TryCheckConfig(configFilePath, "DbName", out var dbName))
+        if (!TryCheckConfig(configFilePath, "DbName", out string? dbName) || string.IsNullOrWhiteSpace(dbName))
         {
             dbName = GetDbName(arguments);
         }
-
-        bool deletePrevious;
-        if (!TryCheckConfig(configFilePath, "DeletePrevious", out var deletePrevString))
+        if (!TryCheckConfig(configFilePath, "DeletePrevious", out bool deletePrevious))
         {
-            deletePrevious = GetDeletePrevious(arguments, tableName);
-        }
-        else if (!bool.TryParse(deletePrevString, out deletePrevious))
-        {
-            deletePrevious = GetDeletePrevious(arguments, tableName);
+            deletePrevious = GetDeletePrevious(arguments, tableName)!;
         }
 
         _config = AppConfiguration.BuildConfiguration(configFilePath, tableName, dbName, deletePrevious, hasConnectionString);
 
     }
 
-    public bool TryCheckConfig(string? configFilePath, string propertyName, out string propertyValue)
+    public bool TryCheckConfig<T>(string? configFilePath, string propertyName, out T? propertyValue)
     {
         bool hasProperty = false;
-        propertyValue = string.Empty;
+        propertyValue = default(T);
         if (configFilePath != null)
         {
             var jsonText = File.ReadAllText(configFilePath);
@@ -45,10 +39,28 @@ public class InputHandler
 
             if (hasProperty)
             {
-                propertyValue = tryValue.GetString() ?? string.Empty;
+                try
+                {
+                    if (typeof(T) == typeof(bool))
+                    {
+                        propertyValue = (T)(object)tryValue.GetBoolean();
+                    }
+                    else if (typeof(T) == typeof(int))
+                    {
+                        propertyValue = (T)(object)tryValue.GetInt64();
+                    }
+                    else
+                    {
+                        propertyValue = (T?)(object?)tryValue.GetString();
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Console.WriteLine($"Error parsing property '{propertyName}' in config file: {ex.Message}");
+                    hasProperty = false;
+                }
             }
         }
-
         return hasProperty;
     }
     public string GetDbName(Dictionary<string, string> arguments)
@@ -176,9 +188,9 @@ public class InputHandler
     }
     public string GetTableName(Dictionary<string, string> arguments)
     {
-        bool isValid = arguments.TryGetValue("table", out var tableName);
+        arguments.TryGetValue("table", out var tableName);
 
-        while (!isValid || string.IsNullOrWhiteSpace(tableName))
+        while (string.IsNullOrWhiteSpace(tableName))
         {
             Console.WriteLine("Enter Name of Table to Import To: ");
             tableName = Console.ReadLine();

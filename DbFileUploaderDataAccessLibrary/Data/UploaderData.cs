@@ -30,9 +30,9 @@ public class UploaderData : IUploaderData
     {
         _db = db;
     }
-    public async Task DeleteTableData(string tableName)
+    public async Task DeleteTableData(string tableName, string dbName)
     {
-        await _db.ExecuteDataAsync<dynamic>($@"DELETE FROM {tableName};", new { });
+        await _db.ExecuteDataAsync<dynamic>("stp_DeleteTableData", new { TableName = tableName, Database = dbName });
     }
 
     public async Task<int> SaveData(string dbName, string tableName, Dictionary<string, object> data)

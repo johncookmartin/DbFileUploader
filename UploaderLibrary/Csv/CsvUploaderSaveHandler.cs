@@ -96,22 +96,25 @@ public class CsvUploaderSaveHandler
                     string colName = colIndex < columns.Count ? columns[colIndex] : $"Column{colIndex + 1}";
                     object? colValue = GenerateParamValueDefined(records[rowIndex], null, rowIndex, colIndex);
                     rowData[colName] = colValue;
-
-                    int id = await _db.SaveToExisting(
+                }
+            }
+            if (rowData.Count > 0)
+            {
+                int id = await _db.SaveData(
                     _tableConfig.GetValue<string>("DbName")!,
                     _tableConfig.GetValue<string>("TableName")!,
                     rowData);
 
-                    if (id > 0)
-                    {
-                        insertCount++;
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Warning: unknown error trying to save row: {rowIndex}");
-                    }
+                if (id > 0)
+                {
+                    insertCount++;
+                }
+                else
+                {
+                    _logger.LogWarning($"Warning: unknown error trying to save row: {rowIndex}");
                 }
             }
+
         }
 
         _logger.LogInformation($"Saved {insertCount} rows from original {records.Count()}");
@@ -184,7 +187,7 @@ public class CsvUploaderSaveHandler
         string tableName = _tableConfig.GetValue<string>("TableName")!;
         string dbName = _tableConfig.GetValue<string>("DbName")!;
         _logger.LogInformation($"Deleting all previous data from {tableName}");
-        await _db.DeleteTableData($"{dbName}.dbo.{tableName}");
+        await _db.DeleteTableData(tableName, dbName);
 
     }
 

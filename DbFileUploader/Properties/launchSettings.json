@@ -2,7 +2,7 @@
   "profiles": {
     "DbFileUploader": {
       "commandName": "Project",
-      "commandLineArgs": "D:\\temp\\bloblist.json D:\\temp\\blob_config.json"
+      "commandLineArgs": "D:\\temp\\random_tests\\test.csv"
     }
   }
 }

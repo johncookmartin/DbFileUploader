@@ -26,7 +26,7 @@ BEGIN
 
 				CREATE TABLE ' + QUOTENAME(@Database) + '.dbo.' + QUOTENAME(@TableName) + '
 				(
-					Id INT IDENTITY(1,1) PRIMARY KEY NOT NULL
+					Id INT ' + CASE WHEN EXISTS(SELECT 1 FROM TableColumns WHERE TableId = @TableId AND ColumnName = 'Id') THEN '' ELSE 'IDENTITY(1,1) ' END + 'PRIMARY KEY NOT NULL
 				)
 			END
 	';

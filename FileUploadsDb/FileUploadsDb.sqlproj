@@ -70,6 +70,7 @@
     <Build Include="Programmability\stp_CreateTable.sql" />
     <Build Include="Programmability\stp_CreateColumns.sql" />
     <Build Include="Programmability\stp_CreateValues.sql" />
+    <Build Include="Programmability\stp_DeleteTableData.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FileUploadsDb.publish.xml" />
