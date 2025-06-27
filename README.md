@@ -57,7 +57,7 @@ The config file supports the following structure:
 |------------------|---------|-------------|
 | `SkipHeaderLines`| int     | Number of lines to skip at the start of the CSV file. |
 | `HasHeaders`     | bool    | Whether the file has headers. |
-| `HasIdentity`    | bool    | Whether the table in sql has identity or not. |
+| `HasIdentity`    | bool    | Whether the table in sql has an auto incrementing identity column. |
 
 ### Columns
 
