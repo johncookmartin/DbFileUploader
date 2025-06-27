@@ -35,7 +35,7 @@ public class JsonHandler : InputHandler
             return jsonData;
         }
 
-        jsonData = JsonHandlerServices.FormatJson(jsonFilePath, _isArray);
+        //jsonData = JsonHandlerServices.FormatJson(jsonFilePath, _isArray);
         if (jsonData.Count == 0)
         {
             Console.WriteLine("JSON file is empty or not formatted correctly");
