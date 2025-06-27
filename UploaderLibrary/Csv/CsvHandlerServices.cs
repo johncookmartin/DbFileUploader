@@ -3,10 +3,13 @@ using CsvHelper.Configuration;
 using System.Globalization;
 
 namespace UploaderLibrary.Csv;
-public static class CsvHandlerServices
+public class CsvHandlerService : IHandlerServices<List<string[]>>
 {
-    public static List<string[]> FormatCSV(string filePath, bool includeHeaders = false)
+
+    public List<string[]> FormatData(string filePath, dynamic? parameters)
     {
+        bool includeHeaders = parameters?.IncludeHeaders ?? false;
+
         var records = new List<string[]>();
 
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)

@@ -2,7 +2,7 @@
 using DbFileUploaderDataAccessLibrary.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using UploaderLibrary.Csv;
+using UploaderLibrary;
 
 namespace DbFileUploader.ConsoleUI;
 public class CsvHandler : InputHandler
@@ -10,7 +10,8 @@ public class CsvHandler : InputHandler
     public List<string[]> Records { get; set; } = new List<string[]>();
     private readonly int _skipHeaderLines;
     private readonly bool _hasHeaders;
-    private readonly CsvUploaderSaveHandler _uploader;
+    private readonly IHandlerServices<List<string[]>> _handler;
+    private readonly IUploaderSaveHandler<List<string[]>> _uploader;
 
     public CsvHandler(Dictionary<string, string> arguments) : base(arguments)
     {
@@ -21,12 +22,13 @@ public class CsvHandler : InputHandler
         //Get Operator Input
         _skipHeaderLines = GetSkipHeaderLines();
         _hasHeaders = GetHasHeaders();
+        _handler = provider.GetRequiredService<IHandlerServices<List<string[]>>>();
         Records = GetCSVData(arguments["file"]);
 
         //Processing File
         var db = provider.GetRequiredService<ISqlDataAccess>();
         var uploaderData = provider.GetRequiredService<IUploaderData>();
-        _uploader = provider.GetRequiredService<CsvUploaderSaveHandler>();
+        _uploader = provider.GetRequiredService<IUploaderSaveHandler<List<string[]>>>();
     }
 
     public List<string[]> GetCSVData(string csvFilePath)
@@ -39,7 +41,7 @@ public class CsvHandler : InputHandler
             return records;
         }
 
-        records = CsvHandlerServices.FormatCSV(csvFilePath, _hasHeaders);
+        records = _handler.FormatData(csvFilePath, new { IncludeHeaders = _hasHeaders });
         if (records.Count == 0)
         {
             Console.WriteLine("CSV file is empty");
@@ -137,7 +139,7 @@ public class CsvHandler : InputHandler
 
         try
         {
-            await _uploader.SaveData(Records, _skipHeaderLines, _hasHeaders);
+            await _uploader.SaveData(Records, new { startingIndex = _skipHeaderLines, hasHeaders = _hasHeaders });
         }
         catch (Exception ex)
         {

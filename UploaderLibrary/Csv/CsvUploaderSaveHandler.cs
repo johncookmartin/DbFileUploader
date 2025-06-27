@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace UploaderLibrary.Csv;
-public class CsvUploaderSaveHandler
+public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
 {
     private readonly IUploaderData _db;
     private readonly IConfiguration _tableConfig;
@@ -17,8 +17,11 @@ public class CsvUploaderSaveHandler
         _logger = logger;
     }
 
-    public async Task SaveData(List<string[]> records, int startingIndex, bool hasHeaders)
+    public async Task SaveData(List<string[]> records, dynamic? parameters)
     {
+        int startingIndex = parameters?.StartingIndex ?? 0;
+        bool hasHeaders = parameters?.HasHeaders ?? false;
+
         bool hasDefinition = _tableConfig.GetSection("Columns").Exists();
         if (hasDefinition)
         {
