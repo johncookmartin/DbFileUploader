@@ -1,5 +1,5 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Data;
+using System.Text;
 
 
 namespace DbFileUploaderDataAccessLibrary.Data;
@@ -90,19 +90,17 @@ public class UploaderData : IUploaderData
             }
 
             columnsBuilder.Append(entry.Key);
-
-            string appendValue = (entry.Value == null) ? "NULL" : entry.Value.ToString()!;
-            paramsBuilder.Append(appendValue);
+            paramsBuilder.Append($"@{entry.Key}");
 
             i++;
         }
 
-        string json = JsonSerializer.Serialize(data);
-
         string sql = $@"INSERT INTO {dbName}.dbo.{tableName} ({columnsBuilder}) VALUES ({paramsBuilder}); SELECT SCOPE_IDENTITY();";
-        int id = (await _db.QueryDataAsync<int, dynamic>(sql, JsonSerializer.Deserialize<dynamic>(json))).FirstOrDefault(0);
+        int? id = (await _db.QueryDataAsync<int?, dynamic>(sql, data, CommandType.Text)).First();
 
-        return id;
+        int finalId = (id == null) ? 0 : id.Value;
+
+        return finalId;
     }
 
     public async Task CreateData(int tableId)

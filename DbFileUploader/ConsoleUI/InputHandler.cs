@@ -133,7 +133,22 @@ public class InputHandler
 
         if (includeConfig)
         {
-            filePath = GetFilePath(filePath);
+            do
+            {
+                filePath = GetFilePath(filePath);
+                if (!string.Equals(Path.GetExtension(filePath), ".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    filePath = Path.ChangeExtension(filePath, ".json");
+                    if (!File.Exists(filePath))
+                    {
+                        Console.WriteLine($"Could not find json file at {filePath}");
+                        filePath = null;
+                    }
+                }
+
+            }
+            while (filePath == null);
+
         }
 
         return filePath;

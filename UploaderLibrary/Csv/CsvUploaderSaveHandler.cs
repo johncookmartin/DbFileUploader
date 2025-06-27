@@ -34,6 +34,7 @@ public class CsvUploaderSaveHandler
     private async Task SaveDataDefined(List<string[]> records, int startingIndex)
     {
         ColumnDefinitionModel[] columns = _tableConfig.GetSection("Columns").Get<ColumnDefinitionModel[]>()!;
+        bool hasIdentity = _tableConfig.GetSection("CsvDetails").GetValue<bool>("HasIdentity");
         int colNum = columns.Length;
         int insertCount = 0;
 
@@ -61,7 +62,7 @@ public class CsvUploaderSaveHandler
                     _tableConfig.GetValue<string>("TableName")!,
                     rowData);
 
-                if (id > 0)
+                if (id > 0 || !hasIdentity)
                 {
                     insertCount++;
                 }
@@ -166,15 +167,20 @@ public class CsvUploaderSaveHandler
         }
         else if (colType.Contains("int", StringComparison.OrdinalIgnoreCase))
         {
-            if (!isNullable)
+            isValid = int.TryParse(value, out int intValue);
+            if (!isValid)
             {
-                _logger.LogWarning(warningMessage);
-                return 0;
+                if (!isNullable)
+                {
+                    _logger.LogWarning(warningMessage);
+                    return 0;
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
-            {
-                return null;
-            }
+            return intValue;
         }
         else
         {

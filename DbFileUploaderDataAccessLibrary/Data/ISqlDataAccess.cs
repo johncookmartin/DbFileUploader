@@ -1,10 +1,10 @@
-﻿
-using System.Data;
+﻿using System.Data;
 
 namespace DbFileUploaderDataAccessLibrary.Data;
 
 public interface ISqlDataAccess
 {
-    Task ExecuteDataAsync<T>(string storedProcedure, T parameters, string connectionStringName = "Default", CommandType commandType = CommandType.StoredProcedure);
-    Task<IEnumerable<T>> QueryDataAsync<T, U>(string storedProcedure, U parameters, string connectionStringName = "Default", CommandType commandType = CommandType.StoredProcedure);
+    Task ExecuteDataAsync<T>(string storedProcedure, T parameters, CommandType commandType = CommandType.StoredProcedure, string connectionStringName = "Default");
+    Task<IEnumerable<T>> QueryDataAsync<T, U>(string storedProcedure, U parameters, CommandType commandType = CommandType.StoredProcedure, string connectionStringName = "Default");
+
 }

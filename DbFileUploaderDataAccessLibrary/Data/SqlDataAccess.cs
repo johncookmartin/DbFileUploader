@@ -15,8 +15,8 @@ public class SqlDataAccess : ISqlDataAccess
 
     public async Task<IEnumerable<T>> QueryDataAsync<T, U>(string queryString,
         U parameters,
-        string connectionStringName = "Default",
-        CommandType commandType = CommandType.StoredProcedure)
+        CommandType commandType = CommandType.StoredProcedure,
+        string connectionStringName = "Default")
     {
         string connectionString = _config.GetConnectionString(connectionStringName);
 
@@ -31,8 +31,8 @@ public class SqlDataAccess : ISqlDataAccess
 
     public async Task ExecuteDataAsync<T>(string queryString,
         T parameters,
-        string connectionStringName = "Default",
-        CommandType commandType = CommandType.StoredProcedure)
+        CommandType commandType = CommandType.StoredProcedure,
+        string connectionStringName = "Default")
     {
         string connectionString = _config.GetConnectionString(connectionStringName);
 
