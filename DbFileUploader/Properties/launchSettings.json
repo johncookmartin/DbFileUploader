@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "DbFileUploader": {
-      "commandName": "Project",
-      "commandLineArgs": "D:\\temp\\random_tests\\test.csv"
-    }
-  }
-}
