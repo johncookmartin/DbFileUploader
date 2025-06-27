@@ -5,6 +5,7 @@
 
 # Ignore specific files
 DbFileUploader/appsettings.json
+DbFileUploader/Properties/
 
 # User-specific files
 *.rsuser
