@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using UploaderLibrary;
+using UploaderLibrary.Json;
 
 namespace DbFileUploader.Configuration;
 public static class JsonDependencyInjection
@@ -16,6 +18,10 @@ public static class JsonDependencyInjection
 
         services.AddSingleton<IConfiguration>(config);
         services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
+        services.AddSingleton<IUploaderData, UploaderData>();
+
+        services.AddSingleton<IHandlerServices<Dictionary<string, object>>, JsonHandlerServices>();
+        services.AddSingleton<IUploaderSaveHandler<Dictionary<string, object>>, JsonUploaderSaveHandler>();
 
         return services;
     }

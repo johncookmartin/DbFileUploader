@@ -1,12 +1,17 @@
 ﻿using DbFileUploader.Configuration;
+using DbFileUploaderDataAccessLibrary.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using UploaderLibrary;
 
 namespace DbFileUploader.ConsoleUI;
 public class JsonHandler : InputHandler
 {
     private readonly bool _isArray;
+    private readonly IHandlerServices<Dictionary<string, object>> _handler;
+    private IUploaderSaveHandler<Dictionary<string, object>> _uploader;
     public Dictionary<string, object> JsonData { get; set; } = new Dictionary<string, object>();
+
     public JsonHandler(Dictionary<string, string> arguments) : base(arguments)
     {
         var services = JsonDependencyInjection.ConfigureServices(_config);
@@ -14,16 +19,19 @@ public class JsonHandler : InputHandler
 
         //Get Operator Input
         _isArray = GetIsArray();
+        _handler = provider.GetRequiredService<IHandlerServices<Dictionary<string, object>>>();
         JsonData = GetJsonData(arguments["file"]);
+
+        //Processing File
+        var db = provider.GetRequiredService<ISqlDataAccess>();
+        var uploaderData = provider.GetRequiredService<IUploaderData>();
+        _uploader = provider.GetRequiredService<IUploaderSaveHandler<Dictionary<string, object>>>();
 
         //using StreamReader reader = new StreamReader(jsonFilePath);
         //string json = reader.ReadToEnd();
 
         //var result = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
         //Console.WriteLine();
-
-        GetIsArray();
-
     }
 
     public Dictionary<string, object> GetJsonData(string jsonFilePath)
@@ -35,7 +43,7 @@ public class JsonHandler : InputHandler
             return jsonData;
         }
 
-        //jsonData = JsonHandlerServices.FormatJson(jsonFilePath, _isArray);
+        jsonData = _handler.FormatData(jsonFilePath, new { isArray = _isArray });
         if (jsonData.Count == 0)
         {
             Console.WriteLine("JSON file is empty or not formatted correctly");
