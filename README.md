@@ -57,6 +57,7 @@ The config file supports the following structure:
 |------------------|---------|-------------|
 | `SkipHeaderLines`| int     | Number of lines to skip at the start of the CSV file. |
 | `HasHeaders`     | bool    | Whether the file has headers. |
+| `HasIdentity`    | bool    | Whether the table in sql has identity or not. |
 
 ### Columns
 
@@ -81,7 +82,8 @@ If a list of columns is provided, the application will attempt to save data to t
   },
   "CsvDetails": {
     "SkipHeaderLines": 1,
-    "HasHeaders": true
+    "HasHeaders": true,
+    "HasIdentity": true
   },
   "Columns": [
     {
