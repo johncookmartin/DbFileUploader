@@ -10,6 +10,7 @@ public class JsonHandler : InputHandler
     private readonly IHandlerServices<List<Dictionary<string, object>>> _handler;
     private IUploaderSaveHandler<Dictionary<string, object>> _uploader;
     public List<Dictionary<string, object>> JsonData { get; set; } = new();
+    public List<string> TargetFields { get; set; } = new List<string>();
 
     public JsonHandler(Dictionary<string, string> arguments) : base(arguments)
     {
@@ -17,6 +18,7 @@ public class JsonHandler : InputHandler
         var provider = services.BuildServiceProvider();
 
         //Get Data
+        TargetFields = GetTargetFields(arguments);
         _handler = provider.GetRequiredService<IHandlerServices<List<Dictionary<string, object>>>>();
         JsonData = GetJsonData(arguments["file"]);
 
@@ -41,6 +43,32 @@ public class JsonHandler : InputHandler
             Console.WriteLine("JSON file is empty or not formatted correctly");
         }
         return jsonData;
+    }
+
+    public List<string> GetTargetFields(Dictionary<string, string> arguments)
+    {
+        List<string> targetFields = new List<string>();
+
+        if (arguments.TryGetValue("fields", out var argFields))
+        {
+            if (!string.IsNullOrWhiteSpace(argFields))
+            {
+                targetFields = argFields.Split(',').Select(f => f.Trim()).ToList();
+                Console.WriteLine("Using target fields from arguments: " + string.Join(", ", targetFields));
+                return targetFields;
+            }
+        }
+
+        var configSection = _config.GetSection("JsonDetails:TargetFields");
+        if (configSection.Exists())
+        {
+            targetFields = configSection.Get<List<string>>() ?? new List<string>();
+            Console.WriteLine("Using target fields from configuration: " + string.Join(", ", targetFields));
+            return targetFields;
+        }
+
+        Console.WriteLine("No target fields specified in configuration. Using all fields from JSON data.");
+        return targetFields;
     }
 
     public async Task<bool> UploadFile()
@@ -68,7 +96,7 @@ public class JsonHandler : InputHandler
         {
             try
             {
-                await _uploader.SaveData(record, new { });
+                await _uploader.SaveData(record, new { TargetFields, TableName = _config.GetValue<string>("TableName") });
             }
             catch (Exception ex)
             {
