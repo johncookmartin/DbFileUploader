@@ -8,12 +8,14 @@ public class JsonUploaderSaveHandler : IUploaderSaveHandler<Dictionary<string, o
     private readonly IUploaderData _db;
     private readonly IConfiguration _config;
     private readonly ILogger<JsonUploaderSaveHandler> _logger;
+    private readonly Dictionary<string, object?> _recordsToSave;
 
     public JsonUploaderSaveHandler(IUploaderData db, IConfiguration config, ILogger<JsonUploaderSaveHandler> logger)
     {
         _db = db;
         _config = config;
         _logger = logger;
+        _recordsToSave = new Dictionary<string, object?>();
     }
     public async Task DeleteTableData()
     {
@@ -23,98 +25,90 @@ public class JsonUploaderSaveHandler : IUploaderSaveHandler<Dictionary<string, o
         await _db.DeleteTableData(tableName, dbName);
     }
 
-    public async Task SaveData(Dictionary<string, object?> records, dynamic? parameters)
+    public async Task SaveData(Dictionary<string, object?> records, dynamic parameters)
     {
-        List<string> targetFields = parameters!.GetValue("TargetFields");
-        await SaveDataHelper(records, _config.GetValue<string>("TableName")!, targetFields);
+        List<string> targetFields = GetTargetFields(parameters);
+        bool recursiveSearch = GetRecursiveSearch(parameters);
 
-    }
-
-    private async Task SaveDataHelper(Dictionary<string, object?> records, string tableName, List<string> targetFields, int? rowId = null)
-    {
-        if (records == null || records.Count == 0)
-        {
-            _logger.LogWarning("No records to save. Skipping save operation.");
-            return;
-        }
-
-        Dictionary<string, Dictionary<string, object?>> objectsToSave = new();
-        Dictionary<string, List<object?>> listsToSave = new();
-        Dictionary<string, object> rowData = new();
         foreach (var kvp in records)
         {
-            string key = kvp.Key.Trim();
-            object? value = kvp.Value;
-
-            if (value == null)
+            var value = kvp.Value;
+            if (value is IEnumerable<object?> enumerable && value is not string)
             {
-                _logger.LogWarning($"Skipping key {key} with null value.");
-                continue;
-            }
-            else if (value is Dictionary<string, object>)
-            {
-                var nextRecord = (Dictionary<string, object?>)value;
-                objectsToSave.Add($"{tableName}{key}", nextRecord);
-                rowData.Add("has_" + key, true);
-            }
-            else if (value is List<object>)
-            {
-                var nextRecords = (List<object?>)value;
-                listsToSave.Add($"{tableName}{key}", nextRecords);
-                rowData.Add("has_" + key, true);
+                if (recursiveSearch)
+                {
+                    //search recursively for target fields in nested objects
+                }
             }
             else if (targetFields.Count > 0)
             {
-                if (targetFields.Contains(key))
+                if (targetFields.Contains(kvp.Key.Trim()))
                 {
-                    rowData.Add(key, value);
+                    _recordsToSave[kvp.Key] = kvp.Value;
                 }
             }
             else
             {
-                rowData.Add(key, value);
+                _recordsToSave[kvp.Key] = kvp.Value;
             }
         }
 
-        if (rowData.Count > 0)
-        {
-            int id = await _db.SaveData(_config.GetValue<string>("DbName")!, tableName, rowData);
-            if (id > 0)
-            {
-                _logger.LogInformation($"Saved row with ID {id} to {tableName}");
-                foreach (var kvp in objectsToSave)
-                {
-                    var subRecord = kvp.Value;
-                    await SaveDataHelper(subRecord, kvp.Key, targetFields, id);
-                }
-                foreach (var kvp in listsToSave)
-                {
-                    SaveSubList(kvp.Key, kvp.Value, id, tableName, targetFields);
-                }
-            }
-            else
-            {
-                _logger.LogWarning($"Failed to save row to {tableName}");
-            }
-        }
     }
 
-    private void SaveSubList(string key, List<object?> value, int id, string tableName, List<string> targetFields)
+    private List<string> GetTargetFields(dynamic parameters)
     {
-        foreach (var item in value)
+        List<string> targetFields = new List<string>();
+
+        dynamic type = parameters.GetType();
+        dynamic prop = type.GetProperty("TargetFields");
+        if (prop != null)
         {
-            if (item is Dictionary<string, object> subRecord)
+            dynamic value = prop.GetValue(parameters, null);
+            targetFields = (value is List<string> list) ? list : new List<string>();
+
+        }
+
+        return targetFields;
+    }
+
+    private bool GetRecursiveSearch(dynamic parameters)
+    {
+        bool recursiveSearch = false;
+        dynamic type = parameters.GetType();
+        dynamic prop = type.GetProperty("RecursiveSearch");
+        if (prop != null)
+        {
+            dynamic value = prop.GetValue(parameters, null);
+            recursiveSearch = Convert.ToBoolean(value);
+        }
+        return recursiveSearch;
+    }
+
+
+    private Dictionary<string, object?> GetTargetRecords(List<string> targetFields)
+    {
+        Dictionary<string, object?> targetRecords = new();
+        foreach (var field in targetFields)
+        {
+            if (records.ContainsKey(field))
             {
-                SaveDataHelper(subRecord, key, targetFields, id);
+                targetRecords[field] = records[field];
             }
-            else if (item is List<object> subList)
+            else if (recursiveSearch)
             {
-                SaveSubList(key, subList, id, tableName, targetFields);
-            }
-            else
-            {
-                _logger.LogWarning($"Skipping unsupported type {item.GetType()} for key {key}");
+                foreach (var kvp in records)
+                {
+                    if (kvp.Value is Dictionary<string, object?> nestedDict)
+                    {
+                        var nestedRecord = GetTargetRecords(new List<string> { field }, nestedDict, recursiveSearch);
+                        if (nestedRecord.Count > 0)
+                        {
+                            targetRecords[field] = nestedRecord;
+                        }
+                    }
+                }
             }
         }
+        return targetRecords;
     }
 }

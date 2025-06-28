@@ -6,9 +6,9 @@ namespace UploaderLibrary.Csv;
 public class CsvHandlerService : IHandlerServices<List<string[]>>
 {
 
-    public List<string[]> FormatData(string filePath, dynamic? parameters)
+    public List<string[]> FormatData(string filePath, dynamic parameters)
     {
-        bool includeHeaders = parameters?.IncludeHeaders ?? false;
+        bool includeHeaders = getIncludeHeaders(parameters);
 
         var records = new List<string[]>();
 
@@ -32,6 +32,20 @@ public class CsvHandlerService : IHandlerServices<List<string[]>>
         }
 
         return records;
+    }
+
+    private bool getIncludeHeaders(dynamic parameters)
+    {
+        bool includeHeaders = false;
+
+        dynamic type = parameters.GetType();
+        dynamic prop = type.GetProperty("IncludeHeaders");
+        if (prop != null)
+        {
+            dynamic value = prop.GetValue(parameters, null);
+            includeHeaders = Convert.ToBoolean(value);
+        }
+        return includeHeaders;
     }
 
 }

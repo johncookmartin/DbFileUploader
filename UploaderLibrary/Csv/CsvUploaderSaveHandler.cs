@@ -17,10 +17,10 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
         _logger = logger;
     }
 
-    public async Task SaveData(List<string[]> records, dynamic? parameters)
+    public async Task SaveData(List<string[]> records, dynamic parameters)
     {
-        int startingIndex = parameters?.StartingIndex ?? 0;
-        bool hasHeaders = parameters?.HasHeaders ?? false;
+        int startingIndex = getStartingIndex(parameters);
+        bool hasHeaders = getHasHeaders(parameters);
 
         bool hasDefinition = _tableConfig.GetSection("Columns").Exists();
         if (hasDefinition)
@@ -32,6 +32,33 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
             await SaveDataDynamically(records, startingIndex, hasHeaders);
         }
 
+    }
+
+    private int getStartingIndex(dynamic parameters)
+    {
+        int startingIndex = 0;
+
+        dynamic type = parameters.GetType();
+        dynamic prop = type.GetProperty("StartingIndex");
+        if (prop != null)
+        {
+            dynamic value = prop.GetValue(parameters, null);
+            startingIndex = Convert.ToInt32(value);
+        }
+        return startingIndex;
+    }
+
+    private bool getHasHeaders(dynamic parameters)
+    {
+        bool hasHeaders = false;
+        dynamic type = parameters.GetType();
+        dynamic prop = type.GetProperty("HasHeaders");
+        if (prop != null)
+        {
+            dynamic value = prop.GetValue(parameters, null);
+            hasHeaders = Convert.ToBoolean(value);
+        }
+        return hasHeaders;
     }
 
     private async Task SaveDataDefined(List<string[]> records, int startingIndex)
