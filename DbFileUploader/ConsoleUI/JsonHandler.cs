@@ -7,43 +7,35 @@ using UploaderLibrary;
 namespace DbFileUploader.ConsoleUI;
 public class JsonHandler : InputHandler
 {
-    private readonly bool _isArray;
-    private readonly IHandlerServices<Dictionary<string, object>> _handler;
+    private readonly IHandlerServices<List<Dictionary<string, object>>> _handler;
     private IUploaderSaveHandler<Dictionary<string, object>> _uploader;
-    public Dictionary<string, object> JsonData { get; set; } = new Dictionary<string, object>();
+    public List<Dictionary<string, object>> JsonData { get; set; } = new();
 
     public JsonHandler(Dictionary<string, string> arguments) : base(arguments)
     {
         var services = JsonDependencyInjection.ConfigureServices(_config);
         var provider = services.BuildServiceProvider();
 
-        //Get Operator Input
-        _isArray = GetIsArray();
-        _handler = provider.GetRequiredService<IHandlerServices<Dictionary<string, object>>>();
+        //Get Data
+        _handler = provider.GetRequiredService<IHandlerServices<List<Dictionary<string, object>>>>();
         JsonData = GetJsonData(arguments["file"]);
 
-        //Processing File
+        //Preparing to process file
         var db = provider.GetRequiredService<ISqlDataAccess>();
         var uploaderData = provider.GetRequiredService<IUploaderData>();
         _uploader = provider.GetRequiredService<IUploaderSaveHandler<Dictionary<string, object>>>();
-
-        //using StreamReader reader = new StreamReader(jsonFilePath);
-        //string json = reader.ReadToEnd();
-
-        //var result = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(json);
-        //Console.WriteLine();
     }
 
-    public Dictionary<string, object> GetJsonData(string jsonFilePath)
+    public List<Dictionary<string, object>> GetJsonData(string jsonFilePath)
     {
-        Dictionary<string, object> jsonData = new Dictionary<string, object>();
+        List<Dictionary<string, object>> jsonData = new();
         if (!File.Exists(jsonFilePath))
         {
             Console.WriteLine($"JSON file not found: {jsonFilePath}");
             return jsonData;
         }
 
-        jsonData = _handler.FormatData(jsonFilePath, new { isArray = _isArray });
+        jsonData = _handler.FormatData(jsonFilePath, new { });
         if (jsonData.Count == 0)
         {
             Console.WriteLine("JSON file is empty or not formatted correctly");
@@ -51,46 +43,41 @@ public class JsonHandler : InputHandler
         return jsonData;
     }
 
-    private bool GetIsArray()
+    public async Task<bool> UploadFile()
     {
-        bool isValid = false;
-        bool isArray = false;
-
-        var configSection = _config.GetSection("JsonDetails:IsArray");
-        if (configSection.Exists())
+        if (JsonData.Count == 0)
         {
-            isArray = configSection.Get<bool>();
-            isValid = true;
+            Console.WriteLine("No data to upload. Please check the JSON file.");
+            return false;
         }
 
-        while (!isValid)
+        if (_config.GetValue<bool>("DeletePrevious"))
         {
-            Console.WriteLine($"Is the Json file an array of objects?(Y/N)");
-            string? response = Console.ReadLine();
-            if (response != null)
+            try
             {
-                switch (response.ToUpper())
-                {
-                    case "Y":
-                        isArray = true;
-                        isValid = true;
-                        break;
-                    case "N":
-                        isArray = false;
-                        isValid = true;
-                        break;
-                    default:
-                        Console.WriteLine("response must be 'Y' or 'N'");
-                        break;
-                }
+                await _uploader.DeleteTableData();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting previous data: {ex.Message}");
+                return false;
             }
         }
 
-        return isArray;
-    }
+        foreach (var record in JsonData)
+        {
+            try
+            {
+                await _uploader.SaveData(record, new { });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving data: {ex.Message}");
+                return false;
+            }
+        }
 
-    internal async Task<bool> UploadFile()
-    {
-        throw new NotImplementedException();
+
+        return true;
     }
 }
