@@ -7,7 +7,11 @@ public static class ParseArguments
 
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i].StartsWith("--"))
+            if (args[i] == "-r")
+            {
+                result["recursive"] = "true"; // Short option for recursive search
+            }
+            else if (args[i].StartsWith("--"))
             {
                 string key = args[i].Substring(2).ToLowerInvariant();
                 string value = (i + 1 < args.Length && !args[i + 1].StartsWith("--")) ? args[++i] : string.Empty;

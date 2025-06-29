@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 
 namespace UploaderLibrary.Json;
-public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, object>>>
+public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, object?>>>
 {
     public List<Dictionary<string, object?>> FormatData(string filePath, dynamic parameters)
     {
@@ -147,9 +147,9 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
             else if (item is IEnumerable<object?> nestedEnumerable)
             {
                 var nestedFields = RecursiveSearch(nestedEnumerable, targetFields);
-                foreach (var kvp in nestedFields)
+                foreach (var nestedField in nestedFields)
                 {
-                    foundFields[kvp.Key] = kvp.Value;
+                    foundFields[nestedField.Key] = nestedField.Value;
                 }
             }
 

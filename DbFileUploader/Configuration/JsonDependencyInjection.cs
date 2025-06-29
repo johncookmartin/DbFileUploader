@@ -20,8 +20,8 @@ public static class JsonDependencyInjection
         services.AddSingleton<ISqlDataAccess, SqlDataAccess>();
         services.AddSingleton<IUploaderData, UploaderData>();
 
-        services.AddSingleton<IHandlerServices<List<Dictionary<string, object>>>, JsonHandlerServices>();
-        services.AddSingleton<IUploaderSaveHandler<Dictionary<string, object>>, JsonUploaderSaveHandler>();
+        services.AddSingleton<IHandlerServices<List<Dictionary<string, object?>>>, JsonHandlerServices>();
+        services.AddSingleton<IUploaderSaveHandler<Dictionary<string, object?>>, JsonUploaderSaveHandler>();
 
         return services;
     }
