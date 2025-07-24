@@ -27,7 +27,7 @@ The application uses `--argument` style arguments:
 | `-d`, `--delete` | Boolean flag indicating whether to delete any existing data in the table before inserting new data. |
 | `--table`  | Name of the table to upload data to. |
 | `-r`, `--recursive` | Boolean flag indicating whether to recursively search the json data for specific fields. |
-| `fields`   | Array of fields that the json upload should exclusively target to upload. |
+| `--fields`   | Array of fields that the json upload should exclusively target to upload. |
 
 ### Example
 
