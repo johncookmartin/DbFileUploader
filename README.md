@@ -1,10 +1,9 @@
 # DbFileUploader
 
-A .NET console application that uploads file data to a SQL Server database.
+A .NET console application that uploads file data to a SQL Server database into a designated table or can dynamically create and populate tables modeled off of the incoming file.
 
 Currently supports:
-- CSV files  
-- SSMS extracts (via CSV)  
+- CSV files 
 - JSON support is in development  
 
 ---
@@ -32,7 +31,7 @@ The application uses `--argument` style arguments:
 ### Example
 
 ```bash
-FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete true --config "myconfig.json"
+FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete --config "myconfig.json"
 ```
 
 ---
@@ -51,6 +50,7 @@ The config file supports the following structure:
 | `ConnectionStrings` | object | Standard connection strings object; system will use `"Default"` key. |
 | `Columns`         | array   | List of column definitions (see **Columns** section below). |
 | `CsvDetails`      | object  | CSV-specific settings (see **CsvDetails** section below). |
+| `JsonDetails`     | object  | JSON-specific settings (see **JsonDetails** section below). |
 
 ### CsvDetails
 
@@ -59,6 +59,12 @@ The config file supports the following structure:
 | `SkipHeaderLines`| int     | Number of lines to skip at the start of the CSV file. |
 | `HasHeaders`     | bool    | Whether the file has headers. |
 | `HasIdentity`    | bool    | Whether the table in sql has an auto incrementing identity column. |
+
+### JsonDetails
+
+| Property         | Type    | Description |
+|------------------|---------|-------------|
+
 
 ### Columns
 
@@ -116,8 +122,7 @@ If no `Columns` section is provided in the config file, the application requires
 
 ## Roadmap
 
-- [x] Support for CSV files  
-- [x] Support for SSMS extracts  
+- [x] Support for CSV files   
 - [ ] Support for JSON files (coming soon)  
 
 ---
