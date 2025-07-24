@@ -15,6 +15,15 @@ public class JsonUploaderSaveHandler : IUploaderSaveHandler<Dictionary<string, o
         _config = config;
         _logger = logger;
     }
+
+    public async Task CreateData(int tableId)
+    {
+        string tableName = _config.GetValue<string>("TableName")!;
+        string dbName = _config.GetValue<string>("DbName")!;
+        _logger.LogInformation($"Creating table {tableName} in database {dbName}");
+        await _db.CreateData(tableId);
+    }
+
     public async Task DeleteTableData()
     {
         string tableName = _config.GetValue<string>("TableName")!;
@@ -23,11 +32,12 @@ public class JsonUploaderSaveHandler : IUploaderSaveHandler<Dictionary<string, o
         await _db.DeleteTableData(tableName, dbName);
     }
 
-    public async Task SaveData(Dictionary<string, object?> records, dynamic parameters)
+    public async Task<int> SaveData(Dictionary<string, object?> records, dynamic parameters)
     {
         string tableName = _config.GetValue<string>("TableName")!;
         string dbName = _config.GetValue<string>("DbName")!;
         await _db.SaveToExisting(tableName, dbName, records);
+        return 0;
 
     }
 }

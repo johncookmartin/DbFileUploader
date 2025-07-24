@@ -12,6 +12,7 @@ public class CsvHandler : InputHandler
     private readonly bool _hasHeaders;
     private readonly IHandlerServices<List<string[]>> _handler;
     private readonly IUploaderSaveHandler<List<string[]>> _uploader;
+    private int _tableId;
 
     public CsvHandler(Dictionary<string, string> arguments) : base(arguments)
     {
@@ -29,6 +30,38 @@ public class CsvHandler : InputHandler
         var db = provider.GetRequiredService<ISqlDataAccess>();
         var uploaderData = provider.GetRequiredService<IUploaderData>();
         _uploader = provider.GetRequiredService<IUploaderSaveHandler<List<string[]>>>();
+    }
+
+    public async Task CreateTable()
+    {
+        bool hasDefinition = _config.GetSection("Columns").Exists();
+        if (!hasDefinition)
+        {
+            bool isValid = false;
+            while (!isValid)
+            {
+                Console.WriteLine("Do you want to create this table in SQL based on the CSV file inputs? (Y/N)");
+                string? response = Console.ReadLine();
+                if (response != null)
+                {
+                    switch (response.ToUpper())
+                    {
+                        case "Y":
+                            Console.WriteLine("Creating table based on CSV file inputs.");
+                            await _uploader.CreateData(_tableId);
+                            isValid = true;
+                            break;
+                        case "N":
+                            Console.WriteLine("Skipping table creation.");
+                            isValid = true;
+                            break;
+                        default:
+                            Console.WriteLine("Response must be 'Y' or 'N'");
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     public List<string[]> GetCSVData(string csvFilePath)
@@ -104,7 +137,7 @@ public class CsvHandler : InputHandler
 
         while (!headerLinesEntered)
         {
-            Console.WriteLine("Enter Header Lines to Skip: ");
+            Console.WriteLine("Enter Leading Lines to Skip (If using headers for mapping don't skip the headers): ");
             string? headerLineString = Console.ReadLine();
             headerLinesEntered = int.TryParse(headerLineString, out skipHeaderLines);
             if (!headerLinesEntered)
@@ -139,7 +172,7 @@ public class CsvHandler : InputHandler
 
         try
         {
-            await _uploader.SaveData(Records, new { startingIndex = _skipHeaderLines, hasHeaders = _hasHeaders });
+            _tableId = await _uploader.SaveData(Records, new { StartingIndex = _skipHeaderLines, HasHeaders = _hasHeaders });
         }
         catch (Exception ex)
         {

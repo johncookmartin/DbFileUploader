@@ -17,20 +17,31 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
         _logger = logger;
     }
 
-    public async Task SaveData(List<string[]> records, dynamic parameters)
+    public async Task CreateData(int tableId)
+    {
+        string tableName = _tableConfig.GetValue<string>("TableName")!;
+        string dbName = _tableConfig.GetValue<string>("DbName")!;
+        _logger.LogInformation($"Creating table {tableName} in database {dbName}");
+        await _db.CreateData(tableId);
+    }
+
+    public async Task<int> SaveData(List<string[]> records, dynamic parameters)
     {
         int startingIndex = getStartingIndex(parameters);
         bool hasHeaders = getHasHeaders(parameters);
 
         bool hasDefinition = _tableConfig.GetSection("Columns").Exists();
+        int tableId = 0;
         if (hasDefinition)
         {
             await SaveDataDefined(records, startingIndex);
         }
         else
         {
-            await SaveDataDynamically(records, startingIndex, hasHeaders);
+            tableId = await SaveDataDynamically(records, startingIndex, hasHeaders);
         }
+
+        return tableId;
 
     }
 
@@ -106,16 +117,17 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
         _logger.LogInformation($"Saved {insertCount} rows from original {records.Count()}");
     }
 
-    private async Task SaveDataDynamically(List<string[]> records, int startingIndex, bool hasHeaders)
+    private async Task<int> SaveDataDynamically(List<string[]> records, int startingIndex, bool hasHeaders)
     {
         int insertCount = 0;
         List<string> columns = new List<string>();
+        int tableId = 0;
 
         for (int rowIndex = 0; rowIndex < records.Count; rowIndex++)
         {
             Dictionary<string, object?> rowData = new Dictionary<string, object?>();
 
-            for (int colIndex = 0; colIndex < records[rowIndex].Length; colIndex++)
+            for (int colIndex = startingIndex; colIndex < records[rowIndex].Length; colIndex++)
             {
                 if (hasHeaders && rowIndex == 0)
                 {
@@ -131,12 +143,12 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
             }
             if (rowData.Count > 0)
             {
-                int id = await _db.SaveData(
+                tableId = await _db.SaveData(
                     _tableConfig.GetValue<string>("DbName")!,
                     _tableConfig.GetValue<string>("TableName")!,
                     rowData);
 
-                if (id > 0)
+                if (tableId > 0)
                 {
                     insertCount++;
                 }
@@ -149,6 +161,7 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
         }
 
         _logger.LogInformation($"Saved {insertCount} rows from original {records.Count()}");
+        return tableId;
     }
     private object? GenerateParamValueDefined(string[] record, ColumnDefinitionModel[]? columns, int rowIndex, int colIndex)
     {

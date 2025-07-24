@@ -40,6 +40,10 @@ internal class Program
             case ".csv":
                 var csvUploadHandler = new CsvHandler(arguments);
                 uploaded = await csvUploadHandler.UploadFile();
+                if (uploaded)
+                {
+                    await csvUploadHandler.CreateTable();
+                }
                 break;
             case ".json":
 
@@ -47,7 +51,7 @@ internal class Program
                 uploaded = await jsonUploadHandler.UploadFile();
                 break;
             default:
-                Console.WriteLine($"Unsupported file type: {fileType}. Supported types are .csv, .json, and .xml.");
+                Console.WriteLine($"Unsupported file type: {fileType}. Supported types are .csv and .json");
                 break;
         }
 

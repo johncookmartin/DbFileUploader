@@ -26,10 +26,11 @@ BEGIN
 	
 		INSERT INTO ' + QUOTENAME(@Database) + '.dbo.' + QUOTENAME(@TableName) + '
 		('+@SqlColumns+')
-		SELECT *
+		SELECT '+@SqlColumns+'
 		FROM
 		(
-			SELECT c.ColumnName,
+			SELECT r.Id AS RowId,
+				   c.ColumnName,
 				   v.Value
 			FROM ' + QUOTENAME(@FileUploadsDb) + '.dbo.TableRows r
 			INNER JOIN ' + QUOTENAME(@FileUploadsDb) + '.dbo.TableValues v ON v.RowId = r.Id
