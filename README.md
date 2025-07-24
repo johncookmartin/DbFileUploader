@@ -48,6 +48,7 @@ The config file supports the following structure:
 | `TableName`       | string  | Name of the table to upload data to. |
 | `DbName`          | string  | Name of the database to upload data to. |
 | `DeletePrevious`  | bool    | If true, previous data in the target table will be deleted before upload. |
+| `HasIdentity`    | bool    | Whether the table in sql has an auto incrementing identity column. |
 | `ConnectionStrings` | object | Standard connection strings object; system will use `"Default"` key. |
 | `Columns`         | array   | List of column definitions (see **Columns** section below). |
 | `CsvDetails`      | object  | CSV-specific settings (see **CsvDetails** section below). |
@@ -59,7 +60,6 @@ The config file supports the following structure:
 |------------------|---------|-------------|
 | `SkipHeaderLines`| int     | Number of lines to skip at the start of the CSV file. |
 | `HasHeaders`     | bool    | Whether the file has headers. |
-| `HasIdentity`    | bool    | Whether the table in sql has an auto incrementing identity column. |
 
 ### JsonDetails
 
