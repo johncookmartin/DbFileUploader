@@ -25,8 +25,9 @@ The application uses `--argument` style arguments:
 | `--file`   | Path to the file to upload. **Required.** |
 | `--db`     | Name of the database to upload data to. |
 | `--config` | Path to the config file (if not using `appsettings.json`). |
-| `--delete` | Boolean value indicating whether to delete any existing data in the table before inserting new data. |
+| `-d`, `--delete` | Boolean flag indicating whether to delete any existing data in the table before inserting new data. |
 | `--table`  | Name of the table to upload data to. |
+| `-r`, `--recursive` | Boolean flag indicating whether to recursively search the json data for specific fields. |
 
 ### Example
 
