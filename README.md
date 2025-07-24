@@ -21,7 +21,7 @@ The application uses `--argument` style arguments:
 
 | Argument   | Description |
 |------------|-------------|
-| `--file`   | Path to the file to upload. **Required.** |
+| `-f`, `--file`   | Path to the file to upload. **Required.** |
 | `--db`     | Name of the database to upload data to. |
 | `--config` | Path to the config file (if not using `appsettings.json`). |
 | `-d`, `--delete` | Boolean flag indicating whether to delete any existing data in the table before inserting new data. |
