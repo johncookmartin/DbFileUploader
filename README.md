@@ -27,11 +27,12 @@ The application uses `--argument` style arguments:
 | `-d`, `--delete` | Boolean flag indicating whether to delete any existing data in the table before inserting new data. |
 | `--table`  | Name of the table to upload data to. |
 | `-r`, `--recursive` | Boolean flag indicating whether to recursively search the json data for specific fields. |
+| `fields`   | Array of fields that the json upload should exclusively target to upload. |
 
 ### Example
 
 ```bash
-FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete --config "myconfig.json"
+FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete --config "myconfig.json" --fields field1 field2 field3
 ```
 
 ---
@@ -64,7 +65,8 @@ The config file supports the following structure:
 
 | Property         | Type    | Description |
 |------------------|---------|-------------|
-
+| `Recurisve`      | bool    | Whether to recursively search for target fields through the json object |
+| `TargetFields`   | array   | List of target fields. When specified, uploader will only upload target fields |
 
 ### Columns
 
