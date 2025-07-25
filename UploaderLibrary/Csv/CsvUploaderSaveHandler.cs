@@ -75,7 +75,7 @@ public class CsvUploaderSaveHandler : IUploaderSaveHandler<List<string[]>>
     private async Task SaveDataDefined(List<string[]> records, int startingIndex)
     {
         ColumnDefinitionModel[] columns = _tableConfig.GetSection("Columns").Get<ColumnDefinitionModel[]>()!;
-        bool hasIdentity = _tableConfig.GetSection("CsvDetails").GetValue<bool>("HasIdentity");
+        bool hasIdentity = _tableConfig.GetValue<bool>("HasIdentity");
         int colNum = columns.Length;
         int insertCount = 0;
 

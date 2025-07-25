@@ -40,7 +40,7 @@ public class CsvHandler : InputHandler
             bool isValid = false;
             while (!isValid)
             {
-                Console.WriteLine("Do you want to create this table in SQL based on the CSV file inputs? (Y/N)");
+                Console.WriteLine("Do you want to create this table in the database based on the CSV file inputs? (Y/N)");
                 string? response = Console.ReadLine();
                 if (response != null)
                 {

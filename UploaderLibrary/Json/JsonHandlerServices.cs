@@ -15,29 +15,7 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
             Dictionary<string, object?> filteredRecord = new Dictionary<string, object?>();
             foreach (var kvp in record)
             {
-                if (targetFields.Count > 0)
-                {
-                    if (kvp.Value is IEnumerable<object?> enumerable && kvp.Value is not string)
-                    {
-                        if (recursiveSearch)
-                        {
-                            Dictionary<string, object?> foundFields = RecursiveSearch(enumerable, targetFields);
-                            foreach (var foundKvp in foundFields)
-                            {
-                                //defer to non-recursive search if the key already exists
-                                filteredRecord.TryAdd(foundKvp.Key, foundKvp.Value);
-                            }
-                        }
-                    }
-                    else if (targetFields.Contains(kvp.Key.Trim()))
-                    {
-                        filteredRecord[kvp.Key] = kvp.Value;
-                    }
-                }
-                else if (kvp.Value is not IEnumerable<object?> || kvp.Value is string)
-                {
-                    filteredRecord[kvp.Key] = kvp.Value;
-                }
+
             }
             record.Clear();
             foreach (var kvp in filteredRecord)
@@ -81,38 +59,34 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
 
     private List<Dictionary<string, object?>> ImportData(string filePath)
     {
-        bool isArray;
-        List<Dictionary<string, object?>> importData = new List<Dictionary<string, object?>>();
-
         using StreamReader reader = new StreamReader(filePath);
         string json = reader.ReadToEnd();
 
         using var doc = JsonDocument.Parse(json);
+        JsonElement root = doc.RootElement;
 
-        if (doc.RootElement.ValueKind == JsonValueKind.Array)
-        {
-            isArray = true;
-        }
-        else if (doc.RootElement.ValueKind != JsonValueKind.Object)
+        if (root.ValueKind != JsonValueKind.Object && root.ValueKind != JsonValueKind.Array)
         {
             throw new JsonException("Invalid JSON format: Expected an object or an array of objects.");
         }
-        else
-        {
-            isArray = false;
-        }
 
-        if (isArray)
+        List<Dictionary<string, object?>> importData = new();
+
+        if (root.ValueKind == JsonValueKind.Array)
         {
-            importData = JsonSerializer.Deserialize<List<Dictionary<string, object?>>>(json) ?? new List<Dictionary<string, object?>>();
+            foreach (var element in root.EnumerateArray())
+            {
+                if (element.ValueKind != JsonValueKind.Object)
+                {
+                    throw new JsonException("Invalid JSON format: Expected item in array to be a JSON object.");
+                }
+
+                importData.Add(ConvertJsonObject(element));
+            }
         }
         else
         {
-            var singleObject = JsonSerializer.Deserialize<Dictionary<string, object?>>(json);
-            if (singleObject != null)
-            {
-                importData.Add(singleObject);
-            }
+            importData.Add(ConvertJsonObject(root));
         }
 
         if (importData.Count == 0)
@@ -123,10 +97,47 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
         return importData;
     }
 
-    private Dictionary<string, object?> RecursiveSearch(IEnumerable<object?> enumerable, List<string> targetFields)
+    private List<object?> ConvertJsonArray(JsonElement root)
+    {
+        List<object?> arrayData = new();
+        foreach (var element in root.EnumerateArray())
+        {
+            arrayData.Add(ConvertJsonObject(element));
+        }
+        return arrayData;
+    }
+
+    private Dictionary<string, object?> ConvertJsonObject(JsonElement element)
+    {
+        var result = new Dictionary<string, object?>();
+        foreach (var property in element.EnumerateObject())
+        {
+            result[property.Name] = ConvertJsonValue(property.Value);
+        }
+        return result;
+    }
+
+    private object? ConvertJsonValue(JsonElement value)
+    {
+        return value.ValueKind switch
+        {
+            JsonValueKind.String when value.TryGetDateTime(out DateTime dateTime) => dateTime,
+            JsonValueKind.String => value.GetString(),
+            JsonValueKind.Number when value.TryGetInt32(out var i) => i,
+            JsonValueKind.Number => value.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            JsonValueKind.Array => ConvertJsonArray(value),
+            JsonValueKind.Object => ConvertJsonObject(value),
+            _ => value.ToString(),
+        };
+    }
+
+    private Dictionary<string, object?> RecursiveSearch(IEnumerable<object?> element, List<string> targetFields)
     {
         Dictionary<string, object?> foundFields = new Dictionary<string, object?>();
-        foreach (var item in enumerable)
+        foreach (var item in element)
         {
             if (item is KeyValuePair<string, object?> kvp)
             {
