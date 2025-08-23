@@ -137,7 +137,7 @@ If no `Columns` section is provided in the config file, the application requires
 
 - [x] Support for CSV files   
 - [x] Support for JSON files
-- [ ] Suppose for Azure Blob Storage (coming soon)  
+- [ ] Support for Azure Blob Storage (coming soon)  
 
 ---
 
