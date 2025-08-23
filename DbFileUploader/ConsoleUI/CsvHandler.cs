@@ -21,8 +21,8 @@ public class CsvHandler : InputHandler
         var provider = services.BuildServiceProvider();
 
         //Get Operator Input
-        _skipHeaderLines = GetSkipHeaderLines();
-        _hasHeaders = GetHasHeaders();
+        _skipHeaderLines = GetSkipHeaderLines(arguments);
+        _hasHeaders = GetHasHeaders(arguments);
         _handler = provider.GetRequiredService<IHandlerServices<List<string[]>>>();
         Records = GetCSVData(arguments["file"]);
 
@@ -84,16 +84,24 @@ public class CsvHandler : InputHandler
 
     }
 
-    public bool GetHasHeaders()
+    public bool GetHasHeaders(Dictionary<string, string> arguments)
     {
         bool hasHeaders = true;
         bool isValid = false;
 
-        var configSection = _config.GetSection("CsvDetails:HasHeaders");
-        if (configSection.Exists())
+        if (arguments.TryGetValue("headers", out var argValue))
         {
-            hasHeaders = configSection.Get<bool>();
+            hasHeaders = true;
             isValid = true;
+        }
+        else
+        {
+            var configSection = _config.GetSection("CsvDetails:HasHeaders");
+            if (configSection.Exists())
+            {
+                hasHeaders = configSection.Get<bool>();
+                isValid = true;
+            }
         }
 
         while (!isValid)
@@ -123,17 +131,28 @@ public class CsvHandler : InputHandler
         return hasHeaders;
     }
 
-    public int GetSkipHeaderLines()
+    public int GetSkipHeaderLines(Dictionary<string, string> arguments)
     {
         int skipHeaderLines = 0;
         bool headerLinesEntered = false;
 
-        var configSection = _config.GetSection("CsvDetails:SkipHeaderLines");
-        if (configSection.Exists())
+        if (arguments.TryGetValue("skip", out var argValue))
         {
-            skipHeaderLines = configSection.Get<int>();
-            headerLinesEntered = true;
+            if (int.TryParse(argValue, out skipHeaderLines))
+            {
+                headerLinesEntered = true;
+            }
         }
+        else
+        {
+            var configSection = _config.GetSection("CsvDetails:SkipHeaderLines");
+            if (configSection.Exists())
+            {
+                skipHeaderLines = configSection.Get<int>();
+                headerLinesEntered = true;
+            }
+        }
+
 
         while (!headerLinesEntered)
         {

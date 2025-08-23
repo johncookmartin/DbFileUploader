@@ -19,6 +19,10 @@ public static class ParseArguments
             {
                 result["delete"] = "true";
             }
+            else if (args[i] == "-h" || args[i] == "--headers")
+            {
+                result["headers"] = "true";
+            }
             else if (args[i] == "--fields")
             {
                 for (i++; i < args.Length && !args[i].StartsWith("--"); i++)
