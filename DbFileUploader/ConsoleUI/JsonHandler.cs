@@ -56,7 +56,7 @@ public class JsonHandler : InputHandler
             return jsonData;
         }
 
-        jsonData = _handler.FormatData(jsonFilePath, new { TargetFields });
+        jsonData = _handler.FormatData(jsonFilePath, new { TargetFields, IsRecursive });
         if (jsonData.Count == 0)
         {
             Console.WriteLine("JSON file is empty or not formatted correctly");

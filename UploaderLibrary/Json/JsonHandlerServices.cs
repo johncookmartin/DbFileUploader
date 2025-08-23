@@ -8,6 +8,7 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
         List<Dictionary<string, object?>> importData = ImportData(filePath);
 
         List<string> targetFields = GetTargetFields(parameters);
+        HashSet<string> targetFieldsSet = new HashSet<string>(targetFields.Select(f => f.Trim()), StringComparer.OrdinalIgnoreCase);
         bool recursiveSearch = GetRecursiveSearch(parameters);
 
         foreach (var record in importData)
@@ -15,8 +16,50 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
             Dictionary<string, object?> filteredRecord = new Dictionary<string, object?>();
             foreach (var kvp in record)
             {
-
+                if (targetFieldsSet.Count > 0)
+                {
+                    if (kvp.Value is IDictionary<string, object?> dict && recursiveSearch)
+                    {
+                        Dictionary<string, object?> nestedRecords = RecursiveDictSearch(kvp.Key, dict, targetFieldsSet);
+                        foreach (var nestedRecord in nestedRecords)
+                        {
+                            filteredRecord.TryAdd(nestedRecord.Key, nestedRecord.Value);
+                        }
+                    }
+                    else if (kvp.Value is IEnumerable<object?> enumerable && kvp.Value is not string && recursiveSearch)
+                    {
+                        Dictionary<string, object?> nestedRecords = RecursiveSearch(kvp.Key, enumerable, targetFieldsSet);
+                        foreach (var nestedRecord in nestedRecords)
+                        {
+                            filteredRecord.TryAdd(nestedRecord.Key, nestedRecord.Value);
+                        }
+                    }
+                    else if (targetFieldsSet.Contains(kvp.Key.Trim()))
+                    {
+                        if (kvp.Value != null)
+                        {
+                            Type type = kvp.Value.GetType();
+                            if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal))
+                            {
+                                filteredRecord.Add(kvp.Key, kvp.Value);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (kvp.Value != null)
+                    {
+                        Type type = kvp.Value.GetType();
+                        if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal))
+                        {
+                            filteredRecord.Add(kvp.Key, kvp.Value);
+                        }
+                    }
+                }
             }
+
+            // Overwrite the original record with the filtered one
             record.Clear();
             foreach (var kvp in filteredRecord)
             {
@@ -26,6 +69,43 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
 
         return importData;
 
+    }
+
+    private Dictionary<string, object?> RecursiveDictSearch(string key, IDictionary<string, object?> dict, HashSet<string> targetFieldsSet)
+    {
+        Dictionary<string, object?> foundRecords = new();
+
+        foreach (var kvp in dict)
+        {
+            if (kvp.Value is IDictionary<string, object?> innerDict)
+            {
+                Dictionary<string, object?> nestedRecords = RecursiveDictSearch(kvp.Key, innerDict, targetFieldsSet);
+                foreach (var nestedRecord in nestedRecords)
+                {
+                    foundRecords.TryAdd(nestedRecord.Key, nestedRecord.Value);
+                }
+            }
+            else if (kvp.Value is IEnumerable<object?> enumerable && kvp.Value is not string)
+            {
+                Dictionary<string, object?> nestedRecords = RecursiveSearch(kvp.Key, enumerable, targetFieldsSet);
+                foreach (var nestedRecord in nestedRecords)
+                {
+                    foundRecords.TryAdd(nestedRecord.Key, nestedRecord.Value);
+                }
+            }
+            else if (targetFieldsSet.Contains(kvp.Key.Trim()))
+            {
+                if (kvp.Value != null)
+                {
+                    Type type = kvp.Value.GetType();
+                    if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal))
+                    {
+                        foundRecords.Add(kvp.Key, kvp.Value);
+                    }
+                }
+            }
+        }
+        return foundRecords;
     }
 
     private List<string> GetTargetFields(dynamic parameters)
@@ -48,7 +128,7 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
     {
         bool recursiveSearch = false;
         dynamic type = parameters.GetType();
-        dynamic prop = type.GetProperty("RecursiveSearch");
+        dynamic prop = type.GetProperty("IsRecursive");
         if (prop != null)
         {
             dynamic value = prop.GetValue(parameters, null);
@@ -102,7 +182,15 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
         List<object?> arrayData = new();
         foreach (var element in root.EnumerateArray())
         {
-            arrayData.Add(ConvertJsonObject(element));
+            if (element.ValueKind != JsonValueKind.Object)
+            {
+                arrayData.Add(ConvertJsonValue(element));
+            }
+            else
+            {
+                arrayData.Add(ConvertJsonObject(element));
+            }
+
         }
         return arrayData;
     }
@@ -134,37 +222,63 @@ public class JsonHandlerServices : IHandlerServices<List<Dictionary<string, obje
         };
     }
 
-    private Dictionary<string, object?> RecursiveSearch(IEnumerable<object?> element, List<string> targetFields)
+    private Dictionary<string, object?> RecursiveSearch(string key, IEnumerable<object?> value, HashSet<string> targetFieldsSet)
     {
+
         Dictionary<string, object?> foundFields = new Dictionary<string, object?>();
-        foreach (var item in element)
+
+        foreach (var item in value)
         {
-            if (item is KeyValuePair<string, object?> kvp)
+            switch (item)
             {
-                if (kvp.Value is IEnumerable<object?> nestedEnumerable && kvp.Value is not string)
-                {
-                    var nestedFields = RecursiveSearch(nestedEnumerable, targetFields);
-                    foreach (var nestedKvp in nestedFields)
+                case IDictionary<string, object?> dict:
+                    foreach (var innerKvp in dict)
                     {
-                        foundFields.TryAdd(nestedKvp.Key, nestedKvp.Value);
-
+                        if (innerKvp.Value is IEnumerable<object?> subEnumerable && innerKvp.Value is not string)
+                        {
+                            var nested = RecursiveSearch(innerKvp.Key, subEnumerable, targetFieldsSet);
+                            foreach (var result in nested)
+                            {
+                                // for now, if duplicates are found we will keep the first one
+                                foundFields.TryAdd(result.Key, result.Value);
+                            }
+                        }
+                        else if (targetFieldsSet.Contains(innerKvp.Key.Trim()))
+                        {
+                            // for now, if duplicates are found we will keep the first one
+                            foundFields.TryAdd(innerKvp.Key, innerKvp.Value);
+                        }
                     }
-                }
-                else if (targetFields.Contains(kvp.Key.Trim()))
-                {
-                    foundFields.TryAdd(kvp.Key, kvp.Value);
-                }
-            }
-            else if (item is IEnumerable<object?> nestedEnumerable)
-            {
-                var nestedFields = RecursiveSearch(nestedEnumerable, targetFields);
-                foreach (var nestedField in nestedFields)
-                {
-                    foundFields[nestedField.Key] = nestedField.Value;
-                }
-            }
+                    break;
 
+                case IEnumerable<object?> nestedEnumerable when item is not string:
+                    var nonNullItem = nestedEnumerable.FirstOrDefault(x => x != null);
+
+                    if (nonNullItem is not null)
+                    {
+                        Type type = nonNullItem.GetType();
+                        if (type.IsPrimitive || type == typeof(string) || type == typeof(DateTime) || type == typeof(decimal))
+                        {
+                            if (targetFieldsSet.Contains(key.Trim()))
+                            {
+                                // for now, we just convert the list to a string representation
+                                foundFields.TryAdd(key, string.Join(", ", nestedEnumerable));
+                            }
+                        }
+                        else
+                        {
+                            var nestedFromList = RecursiveSearch(key, nestedEnumerable, targetFieldsSet);
+                            foreach (var nestedKvp in nestedFromList)
+                            {
+                                // for now, if duplicates are found we will keep the first one
+                                foundFields.TryAdd(nestedKvp.Key, nestedKvp.Value);
+                            }
+                        }
+                    }
+                    break;
+            }
         }
+
         return foundFields;
     }
 }

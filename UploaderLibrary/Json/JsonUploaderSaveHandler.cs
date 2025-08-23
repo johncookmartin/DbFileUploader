@@ -36,7 +36,13 @@ public class JsonUploaderSaveHandler : IUploaderSaveHandler<Dictionary<string, o
     {
         string tableName = _config.GetValue<string>("TableName")!;
         string dbName = _config.GetValue<string>("DbName")!;
-        await _db.SaveToExisting(tableName, dbName, records);
+        if (records == null || records.Count == 0)
+        {
+            _logger.LogWarning("No records to save.");
+            return -1;
+        }
+        _logger.LogInformation($"Saving data to {tableName} in database {dbName}");
+        await _db.SaveToExisting(dbName, tableName, records);
         return 0;
 
     }
