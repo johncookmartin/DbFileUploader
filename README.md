@@ -4,7 +4,8 @@ A .NET console application that uploads file data to a SQL Server database into 
 
 Currently supports:
 - CSV files 
-- JSON support is in development  
+- JSON files
+- Azure Blob Storage in development 
 
 ---
 
@@ -26,13 +27,19 @@ The application uses `--argument` style arguments:
 | `--config` | Path to the config file (if not using `appsettings.json`). |
 | `-d`, `--delete` | Boolean flag indicating whether to delete any existing data in the table before inserting new data. |
 | `--table`  | Name of the table to upload data to. |
+| `--skip` | Number indicating how many lines to skip at the top of the csv file |
+| `-h`, `--headers` | Boolean flag indeicated that the csv file has a header row |
 | `-r`, `--recursive` | Boolean flag indicating whether to recursively search the json data for specific fields. |
 | `--fields`   | Array of fields that the json upload should exclusively target to upload. |
 
 ### Example
 
 ```bash
-FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete --config "myconfig.json" --fields field1 field2 field3
+FileUploaderConsoleApp.exe --file "data.csv" --db "MyDatabase" --table "TargetTable" --delete --config "myconfig.json"
+```
+
+```bash
+FileUploaderConsole.App.exe -f "data.json" --db "MyDatabase" --table "TargetTable" -d --config "myconfig.json" --recursive --fields field1 field2 field3
 ```
 
 ---
@@ -65,7 +72,7 @@ The config file supports the following structure:
 
 | Property         | Type    | Description |
 |------------------|---------|-------------|
-| `Recurisve`      | bool    | Whether to recursively search for target fields through the json object |
+| `IsRecurisve`      | bool    | Whether to recursively search for target fields through the json object |
 | `TargetFields`   | array   | List of target fields. When specified, uploader will only upload target fields |
 
 ### Columns
@@ -94,6 +101,10 @@ If a list of columns is provided, the application will attempt to save data to t
     "HasHeaders": true,
     "HasIdentity": true
   },
+  "JsonDetails": {
+    "IsRecursive" : true,
+    "TargetFields": ["FirstName", "LastName"]
+  }
   "Columns": [
     {
       "ColumnIndex": 0,
@@ -125,12 +136,12 @@ If no `Columns` section is provided in the config file, the application requires
 ## Roadmap
 
 - [x] Support for CSV files   
-- [ ] Support for JSON files (coming soon)  
+- [x] Support for JSON files
+- [ ] Suppose for Azure Blob Storage (coming soon)  
 
 ---
 
 ## Notes
 
 - The application requires a valid SQL Server connection string with permissions to insert data.
-- CSV files must be UTF-8 encoded.
 
